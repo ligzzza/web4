@@ -110,3 +110,5 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
 }
+# Кастомная модель пользователя
+AUTH_USER_MODEL = 'main.User'
