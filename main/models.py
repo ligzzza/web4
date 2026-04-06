@@ -32,7 +32,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
-        swappable = 'AUTH_USER_MODEL'  # 👈 ЭТА СТРОКА ВАЖНА! Указывает, что это кастомная модель
+        swappable = 'AUTH_USER_MODEL'  # Указывает, что это кастомная модель
 
     def __str__(self):
         return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
