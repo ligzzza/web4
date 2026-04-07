@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет организатора</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Добро пожаловать, {{ user.first_name|default:user.username }}! 🏢</h1>
+        <p>Вы вошли как <strong>Организатор</strong></p>
+
+        <div class="menu">
+            <a href="/api/masterclasses/">Мои мастер-классы</a>
+            <a href="/api/masterclasses/create/">Создать мастер-класс</a>
+            <a href="/api/bookings/">Бронирования на мои мастер-классы</a>
+            <a href="/logout/">Выйти</a>
+        </div>
+    </div>
+</body>
+</html>

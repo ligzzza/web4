@@ -1,0 +1,114 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Регистрация - МастерГрад{% endblock %}
+
+{% block content %}
+<h2>Регистрация</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label>Выберите роль:</label>
+        <div class="role-buttons">
+            <div class="role-btn {% if form.role.value == 'participant' %}active{% endif %}" data-role="participant">
+                🎓 Участник
+            </div>
+            <div class="role-btn {% if form.role.value == 'organizer' %}active{% endif %}" data-role="organizer">
+                🏢 Организатор
+            </div>
+        </div>
+        <input type="hidden" name="role" id="role" value="{{ form.role.value|default:'participant' }}">
+    </div>
+
+    <div class="form-group">
+        <label>Имя пользователя:</label>
+        <input type="text" name="username" value="{{ form.username.value|default:'' }}" placeholder="Введите имя пользователя" required>
+        {% if form.username.errors %}
+            <ul class="errorlist">
+                {% for error in form.username.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label>Email:</label>
+        <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="example@mail.ru" required>
+        {% if form.email.errors %}
+            <ul class="errorlist">
+                {% for error in form.email.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label>Имя:</label>
+        <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" placeholder="Ваше имя">
+    </div>
+
+    <div class="form-group">
+        <label>Фамилия:</label>
+        <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Ваша фамилия">
+    </div>
+
+    <div class="form-group">
+        <label>Телефон:</label>
+        <input type="tel" name="phone" value="{{ form.phone.value|default:'' }}" placeholder="+7 (999) 123-45-67">
+    </div>
+
+    <div class="form-group">
+        <label>Пароль:</label>
+        <input type="password" name="password" placeholder="Минимум 8 символов" required>
+        {% if form.password.errors %}
+            <ul class="errorlist">
+                {% for error in form.password.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label>Подтверждение пароля:</label>
+        <input type="password" name="password2" placeholder="Повторите пароль" required>
+    </div>
+
+    <div class="form-group organizer-fields {% if form.role.value != 'organizer' %}hidden{% endif %}">
+        <label>Название студии/организации:</label>
+        <input type="text" name="organization_name" value="{{ form.organization_name.value|default:'' }}" placeholder="Название вашей студии">
+    </div>
+
+    <button type="submit">Зарегистрироваться</button>
+</form>
+
+<div class="links">
+    Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
+</div>
+
+<script>
+    // Переключение ролей
+    const roleBtns = document.querySelectorAll('.role-btn');
+    const roleInput = document.getElementById('role');
+    const organizerFields = document.querySelector('.organizer-fields');
+
+    roleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const role = this.dataset.role;
+            roleInput.value = role;
+            
+            roleBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (role === 'organizer') {
+                organizerFields.classList.remove('hidden');
+            } else {
+                organizerFields.classList.add('hidden');
+            }
+        });
+    });
+</script>
+{% endblock %}
