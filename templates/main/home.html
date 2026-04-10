@@ -1,11 +1,39 @@
 {% extends 'main/base.html' %}
 
-{% block title %}Главная - МастерГрад{% endblock %}
+{% block title %}MasterClass Hub{% endblock %}
 
 {% block content %}
-<div class="container" style="text-align: center; padding: 4rem 2rem;">
-    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Добро пожаловать в <span style="color: #E8A0B4;">МастерГрад</span></h1>
-    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Найдите свой идеальный мастер-класс и раскройте творческий потенциал</p>
-    <a href="{% url 'catalog' %}" class="btn" style="font-size: 1.1rem; padding: 1rem 2rem;">Смотреть каталог</a>
+<div class="container" style="max-width: 1200px;">
+    <!-- Hero секция -->
+    <div style="text-align: center; padding: 3rem 0;">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">Найди свой <span style="color: var(--accent-pink);">творческий путь</span></h1>
+        <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Мастер-классы по кулинарии, танцам, рукоделию и многому другому</p>
+        <a href="{% url 'catalog' %}" class="btn" style="font-size: 1.1rem; padding: 1rem 2rem;">Смотреть каталог</a>
+    </div>
+
+
+    <!-- Список мастер-классов -->
+    <h2 style="margin-bottom: 2rem;">Популярные мастер-классы</h2>
+    <div class="grid">
+        {% for mc in masterclasses %}
+        <div class="card">
+            {% with mc.images.first as main_image %}
+                {% if main_image %}
+                    <img src="{{ main_image.image.url }}" alt="{{ mc.title }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem;">
+                {% else %}
+                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); border-radius: 12px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: white;">
+                        📷 Скоро здесь будет фото
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <h3>{{ mc.title }}</h3>
+            <p>📍 {{ mc.city }} • 💰 {{ mc.price }} ₽</p>
+            <p>📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}</p>
+            <a href="{% url 'masterclass_detail' mc.id %}" class="btn" style="margin-top: 1rem; display: block; text-align: center;">Подробнее</a>
+        </div>
+        {% empty %}
+        <p>Пока нет мастер-классов</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

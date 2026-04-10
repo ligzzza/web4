@@ -32,3 +32,14 @@ class RegisterForm(forms.ModelForm):
 class LoginForm(forms.Form):
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
+
+from .models import Image
+
+class ImageForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = ['image', 'is_main']
+        widgets = {
+            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'is_main': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }

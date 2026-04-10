@@ -1,0 +1,169 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Создать мастер-класс{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">✨ Создать мастер-класс</h2>
+        <p style="color: #666;">Заполните информацию о вашем мероприятии</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="create-form">
+        {% csrf_token %}
+
+        <!-- Основная информация -->
+        <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📝 Основное</h3>
+
+            <div class="form-group">
+                <label>Название мастер-класса</label>
+                <input type="text" name="title" placeholder="Например: Итальянская пицца" required>
+            </div>
+
+            <div class="form-group">
+                <label>Категория</label>
+                <select name="category" required>
+                    <option value="">Выберите категорию</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" rows="6" placeholder="Расскажите, что будет на мастер-классе, что нужно взять с собой, какие навыки приобретут участники..." required></textarea>
+            </div>
+        </div>
+
+        <!-- Место проведения -->
+        <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📍 Где и когда</h3>
+
+            <div class="form-group">
+                <label>Город</label>
+                <input type="text" name="city" placeholder="Москва, Санкт-Петербург..." required>
+            </div>
+
+            <div class="form-group">
+                <label>Адрес</label>
+                <input type="text" name="address" placeholder="Улица, дом, помещение" required>
+            </div>
+
+            <div class="form-group">
+                <label>Формат</label>
+                <select name="format">
+                    <option value="offline">🏢 Офлайн (в студии)</option>
+                    <option value="online">💻 Онлайн (Zoom, Skype)</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Дата и время начала</label>
+                    <input type="datetime-local" name="start_datetime" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Дата и время окончания</label>
+                    <input type="datetime-local" name="end_datetime" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Цена и участники -->
+        <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">💰 Участники и цена</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <input type="number" name="price" min="0" step="100" placeholder="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Максимум участников</label>
+                    <input type="number" name="max_participants" min="1" placeholder="10" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Фотографии -->
+        <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📷 Фотографии</h3>
+
+            <div class="form-group">
+                <label>Загрузите фото мастер-класса</label>
+                <div class="file-upload-area" style="border: 2px dashed #ddd; border-radius: 16px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s;" onclick="document.getElementById('fileInput').click()">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-pink)" stroke-width="1.5" style="margin-bottom: 0.5rem;">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="10.5" r="2.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <p style="color: #888;">Нажмите или перетащите фото сюда</p>
+                    <small style="color: #aaa;">Можно выбрать несколько фото. Первое фото станет главным.</small>
+                </div>
+                <input type="file" name="images" id="fileInput" multiple accept="image/*" style="display: none;" onchange="updateFileList(this)">
+                <div id="fileList" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- Кнопка отправки -->
+        <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            ✨ Создать мастер-класс
+        </button>
+    </form>
+</div>
+
+<script>
+    function updateFileList(input) {
+        const fileListDiv = document.getElementById('fileList');
+        fileListDiv.innerHTML = '';
+
+        if (input.files.length > 0) {
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                const badge = document.createElement('span');
+                badge.style.cssText = 'background: var(--soft-pink); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;';
+                badge.innerHTML = `📷 ${file.name.substring(0, 20)}${file.name.length > 20 ? '...' : ''} ${i === 0 ? '⭐' : ''}`;
+                fileListDiv.appendChild(badge);
+            }
+        }
+    }
+</script>
+
+<style>
+    .create-form .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .create-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--dark-text);
+    }
+
+    .create-form input, .create-form select, .create-form textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        font-family: 'Jost', sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .create-form input:focus, .create-form select:focus, .create-form textarea:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--accent-pink);
+        background: rgba(232, 160, 180, 0.05);
+    }
+</style>
+{% endblock %}

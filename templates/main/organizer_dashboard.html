@@ -1,22 +1,54 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Личный кабинет организатора</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-</head>
-<body>
-    <div class="dashboard">
-        <h1>Добро пожаловать, {{ user.first_name|default:user.username }}! 🏢</h1>
-        <p>Вы вошли как <strong>Организатор</strong></p>
+{% extends 'main/base.html' %}
 
-        <div class="menu">
-            <a href="/api/masterclasses/">Мои мастер-классы</a>
-            <a href="/api/masterclasses/create/">Создать мастер-класс</a>
-            <a href="/api/bookings/">Бронирования на мои мастер-классы</a>
-            <a href="/logout/">Выйти</a>
-        </div>
+{% block title %}Моя студия - MasterClass Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+    <h2>🏢 Моя студия</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>Информация</h3>
+        <p><strong>Название:</strong> {{ user.organization_name|default:user.username }}</p>
+        <p><strong>Имя организатора:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Телефон:</strong> {{ user.phone|default:"Не указан" }}</p>
     </div>
-</body>
-</html>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>🎯 Мои мастер-классы</h3>
+            <a href="{% url 'create_masterclass' %}" class="btn">+ Создать новый</a>
+        </div>
+        {% if my_masterclasses %}
+            {% for mc in my_masterclasses %}
+            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <p><strong>{{ mc.title }}</strong></p>
+                <p>📍 {{ mc.city }} • 📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}</p>
+                <p>👥 {{ mc.current_participants }}/{{ mc.max_participants }} мест • 💰 {{ mc.price }} ₽</p>
+                <p>Статус: {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}</p>
+                <a href="{% url 'masterclass_detail' mc.id %}" class="btn-outline" style="display: inline-block; margin-top: 0.5rem;">Редактировать</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>У вас пока нет мастер-классов</p>
+            <a href="{% url 'create_masterclass' %}" class="btn">Создать первый мастер-класс</a>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <h3>📋 Записи на мои мастер-классы</h3>
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <p><strong>{{ booking.masterclass.title }}</strong></p>
+                <p>👤 {{ booking.participant.first_name }} {{ booking.participant.last_name }}</p>
+                <p>📞 {{ booking.participant.phone|default:"Телефон не указан" }}</p>
+                <p>💰 {{ booking.total_price }} ₽ • Статус: {{ booking.get_status_display }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Пока нет записей</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

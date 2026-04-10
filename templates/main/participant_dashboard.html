@@ -1,22 +1,48 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Личный кабинет участника</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-</head>
-<body>
-    <div class="dashboard">
-        <h1>Добро пожаловать, {{ user.first_name|default:user.username }}! 🎓</h1>
-        <p>Вы вошли как <strong>Участник</strong></p>
+{% extends 'main/base.html' %}
 
-        <div class="menu">
-            <a href="/api/masterclasses/">Просмотр мастер-классов</a>
-            <a href="/api/bookings/">Мои бронирования</a>
-            <a href="/api/favorites/">Избранное</a>
-            <a href="/logout/">Выйти</a>
-        </div>
+{% block title %}Мой профиль - MasterClass Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <h2>👤 Мой профиль</h2>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>Личная информация</h3>
+        <p><strong>Имя:</strong> {{ user.first_name|default:"Не указано" }}</p>
+        <p><strong>Фамилия:</strong> {{ user.last_name|default:"Не указано" }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Телефон:</strong> {{ user.phone|default:"Не указан" }}</p>
     </div>
-</body>
-</html>
+    
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>📅 Мои бронирования</h3>
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <p><strong>{{ booking.masterclass.title }}</strong></p>
+                <p>📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }} • 📍 {{ booking.masterclass.city }}</p>
+                <p>💰 {{ booking.total_price }} ₽ • Статус: {{ booking.get_status_display }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>У вас пока нет бронирований</p>
+            <a href="{% url 'catalog' %}" class="btn">Перейти в каталог</a>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <h3>❤️ Избранное</h3>
+        {% if favorites %}
+            {% for fav in favorites %}
+            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <p><strong>{{ fav.masterclass.title }}</strong></p>
+                <p>📍 {{ fav.masterclass.city }} • 💰 {{ fav.masterclass.price }} ₽</p>
+                <a href="{% url 'masterclass_detail' fav.masterclass.id %}" class="btn-outline" style="display: inline-block; margin-top: 0.5rem;">Подробнее</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>У вас пока нет избранных мастер-классов</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

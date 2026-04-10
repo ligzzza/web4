@@ -1,0 +1,138 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}{{ masterclass.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+    <!-- Навигация назад -->
+    <a href="{% url 'catalog' %}" style="color: var(--accent-pink); text-decoration: none;">← Назад к каталогу</a>
+
+    <!-- Основная информация -->
+    <div class="card" style="margin-top: 1rem;">
+        <!-- Изображение -->
+        {% with masterclass.images.first as main_image %}
+            {% if main_image %}
+                <img src="{{ main_image.image.url }}" alt="{{ masterclass.title }}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 16px; margin-bottom: 1.5rem;">
+            {% else %}
+                <div style="width: 100%; height: 300px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); border-radius: 16px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                    📷 Мастер-класс
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h1>{{ masterclass.title }}</h1>
+
+        <!-- Рейтинг -->
+        <div style="display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0;">
+            {% if avg_rating %}
+                <span style="background: var(--accent-pink); padding: 0.3rem 0.8rem; border-radius: 30px; color: white; font-weight: 600;">
+                    ⭐ {{ avg_rating }}
+                </span>
+            {% endif %}
+            <span style="color: #666;">{{ reviews_count }} отзывов</span>
+        </div>
+
+        <!-- Характеристики -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 1rem; background: var(--light-gray); border-radius: 16px;">
+            <div><strong>💰 Цена:</strong> {{ masterclass.price }} ₽</div>
+            <div><strong>📍 Город:</strong> {{ masterclass.city }}</div>
+            <div><strong>📅 Дата:</strong> {{ masterclass.start_datetime|date:"d.m.Y H:i" }}</div>
+            <div><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</div>
+            <div><strong>👥 Места:</strong> {{ masterclass.free_places }} / {{ masterclass.max_participants }}</div>
+            <div><strong>📂 Категория:</strong> {{ masterclass.category.name }}</div>
+        </div>
+
+        <!-- Адрес -->
+        <p><strong>📍 Адрес:</strong> {{ masterclass.address }}</p>
+
+        <!-- Описание -->
+        <div style="margin: 1.5rem 0;">
+            <h3>📖 О мастер-классе</h3>
+            <p style="line-height: 1.6;">{{ masterclass.description }}</p>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+            {% if user.is_authenticated %}
+                {% if user.role == 'participant' %}
+                    {% if is_booked %}
+                        <button class="btn" disabled style="opacity: 0.6; background: #ccc;">✓ Вы уже записаны</button>
+                    else %}
+                        {% if masterclass.has_free_places %}
+                            <a href="{% url 'add_booking' masterclass.id %}" class="btn">📝 Записаться ({{ masterclass.price }} ₽)</a>
+                        {% else %}
+                            <button class="btn" disabled style="opacity: 0.6; background: #ccc;">❌ Мест нет</button>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Кнопка избранное -->
+                    {% if is_favorite %}
+                        <a href="{% url 'remove_favorite' masterclass.id %}" class="btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                            В избранном
+                        </a>
+                    {% else %}
+                        <a href="{% url 'add_favorite' masterclass.id %}" class="btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-pink)" stroke-width="1.5">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                            В избранное
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                {% if can_edit %}
+                    <a href="{% url 'edit_masterclass' masterclass.id %}" class="btn">✏️ Редактировать</a>
+                    <a href="{% url 'delete_masterclass' masterclass.id %}" class="btn" style="background: #e74c3c; color: white;">🗑️ Удалить</a>
+                {% endif %}
+
+                {% if can_review %}
+                    <a href="{% url 'add_review' masterclass.id %}" class="btn-outline">⭐ Написать отзыв</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login' %}" class="btn">Войдите, чтобы записаться</a>
+            {% endif %}
+        </div>
+
+    <!-- Блок организатора (список участников) -->
+    {% if participants_list and can_edit %}
+    <div class="card" style="margin-top: 2rem;">
+        <h3>👥 Участники ({{ participants_list|length }})</h3>
+        <ul style="margin-top: 1rem;">
+            {% for participant in participants_list %}
+                <li>{{ participant.first_name }} {{ participant.last_name }} ({{ participant.email }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Отзывы -->
+    <div class="card" style="margin-top: 2rem;">
+        <h3>⭐ Отзывы ({{ reviews_count }})</h3>
+
+        {% if reviews %}
+            {% for review in reviews %}
+            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>{{ review.author.first_name }} {{ review.author.last_name }}</strong>
+                        <span style="color: #f5a623;">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <small style="color: #888;">{{ review.created_at|date:"d.m.Y" }}</small>
+                </div>
+                <p style="margin-top: 0.5rem;">{{ review.text }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Пока нет отзывов. Будьте первым, кто оставит отзыв!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

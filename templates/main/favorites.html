@@ -1,0 +1,51 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Избранное{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <h2 style="font-size: 2rem; color: var(--dark-text); margin: 0;">Избранное</h2>
+        </div>
+        <p style="color: #666;">Мастер-классы, которые вам понравились</p>
+    </div>
+
+    {% if favorites %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for fav in favorites %}
+            <div style="background: white; border-radius: 16px; padding: 1.2rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--soft-pink); transition: all 0.3s;">
+                <div style="flex: 1;">
+                    <h3 style="margin-bottom: 0.3rem; color: var(--dark-text);">{{ fav.masterclass.title }}</h3>
+                    <p style="color: #888; margin: 0;">
+                        📍 {{ fav.masterclass.city }} • 💰 {{ fav.masterclass.price }} ₽
+                    </p>
+                    <p style="color: #aaa; font-size: 0.85rem; margin-top: 0.3rem;">
+                        📅 {{ fav.masterclass.start_datetime|date:"d.m.Y H:i" }}
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.8rem;">
+                    <a href="{% url 'masterclass_detail' fav.masterclass.id %}" class="btn" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">Подробнее</a>
+                    <a href="{% url 'remove_favorite' fav.masterclass.id %}" style="background: transparent; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center;" title="Удалить из избранного">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="background: white; border-radius: 20px; padding: 3rem; text-align: center; border: 1px solid var(--soft-pink);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5" style="margin-bottom: 1rem;">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <p style="color: #888;">У вас пока нет избранных мастер-классов</p>
+            <a href="{% url 'catalog' %}" class="btn" style="margin-top: 1rem;">Перейти в каталог</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

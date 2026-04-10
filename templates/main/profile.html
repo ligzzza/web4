@@ -1,0 +1,56 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">👤 Мой профиль</h2>
+        <p style="color: #666;">Управление личной информацией</p>
+    </div>
+
+    <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
+        <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">Личная информация</h3>
+
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Имя:</strong> {{ user.first_name|default:"Не указано" }}</p>
+            <p><strong>Фамилия:</strong> {{ user.last_name|default:"Не указано" }}</p>
+            <p><strong>Телефон:</strong> {{ user.phone|default:"Не указан" }}</p>
+            <p><strong>Роль:</strong>
+                <span style="background: var(--soft-pink); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                    {% if user.role == 'organizer' %}
+                        🏢 Организатор
+                    {% elif user.role == 'admin' %}
+                        👑 Администратор
+                    {% else %}
+                        🎓 Участник
+                    {% endif %}
+                </span>
+            </p>
+            {% if user.organization_name %}
+                <p><strong>Название студии:</strong> {{ user.organization_name }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{% url 'catalog' %}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            📚 В каталог
+        </a>
+
+        {% if user.role == 'organizer' %}
+            <a href="{% url 'create_masterclass' %}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, var(--accent-pink), #d48a9e);">
+                ✨ Создать мастер-класс
+            </a>
+        {% endif %}
+
+        {% if user.role == 'participant' %}
+            <a href="{% url 'favorites_list' %}" class="btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                ❤️ Избранное
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
