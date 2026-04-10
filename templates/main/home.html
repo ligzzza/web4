@@ -1,0 +1,11 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Главная - МастерГрад{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align: center; padding: 4rem 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem;">Добро пожаловать в <span style="color: #E8A0B4;">МастерГрад</span></h1>
+    <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Найдите свой идеальный мастер-класс и раскройте творческий потенциал</p>
+    <a href="{% url 'catalog' %}" class="btn" style="font-size: 1.1rem; padding: 1rem 2rem;">Смотреть каталог</a>
+</div>
+{% endblock %}

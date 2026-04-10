@@ -23,4 +23,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('participant/dashboard/', views.participant_dashboard, name='participant_dashboard'),
     path('organizer/dashboard/', views.organizer_dashboard, name='organizer_dashboard'),
+    path('', views.home_view, name='home'),
+    path('catalog/', views.catalog_view, name='catalog'),
+    path('profile/', views.profile_view, name='profile'),
+    path('favorites/', views.favorites_list_view, name='favorites_list'),
+    path('create/', views.create_masterclass_view, name='create_masterclass'),
 ]

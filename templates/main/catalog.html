@@ -1,0 +1,22 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Каталог мастер-классов{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">Каталог мастер-классов</h1>
+    
+    <div class="grid">
+        {% for mc in masterclasses %}
+        <div class="card">
+            <h3>{{ mc.title }}</h3>
+            <p>{{ mc.city }} • {{ mc.price }} ₽</p>
+            <p>{{ mc.start_datetime|date:"d.m.Y H:i" }}</p>
+            <a href="#" class="btn" style="margin-top: 1rem;">Подробнее</a>
+        </div>
+        {% empty %}
+        <p>Пока нет доступных мастер-классов</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

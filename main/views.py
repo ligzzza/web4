@@ -260,3 +260,117 @@ def participant_dashboard(request):
 def organizer_dashboard(request):
     """Страница для организатора"""
     return render(request, 'main/organizer_dashboard.html', {'user': request.user})
+
+
+# WEB VIEWS (НОВЫЙ КОД - ДОБАВИТЬ В КОНЕЦ ФАЙЛА)
+# ============================================================
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('/')
+
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            if user.role == 'organizer':
+                return redirect('/organizer/dashboard/')
+            else:
+                return redirect('/participant/dashboard/')
+    else:
+        form = RegisterForm()
+
+    return render(request, 'main/register.html', {'form': form})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('/')
+
+    error = None
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user:
+                login(request, user)
+                if user.role == 'organizer':
+                    return redirect('/organizer/dashboard/')
+                else:
+                    return redirect('/participant/dashboard/')
+            else:
+                error = 'Неверное имя пользователя или пароль'
+    else:
+        form = LoginForm()
+
+    return render(request, 'main/login.html', {'form': form, 'error': error})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/login/')
+
+
+@login_required
+def participant_dashboard(request):
+    return render(request, 'main/participant_dashboard.html', {'user': request.user})
+
+
+@login_required
+def organizer_dashboard(request):
+    return render(request, 'main/organizer_dashboard.html', {'user': request.user})
+
+
+# ============================================================
+# НОВЫЕ VIEW-ФУНКЦИИ ДЛЯ НОВОГО ДИЗАЙНА (ДОБАВИТЬ СЮДА)
+# ============================================================
+
+def home_view(request):
+    """Главная страница"""
+    return render(request, 'main/home.html')
+
+
+def catalog_view(request):
+    """Каталог мастер-классов"""
+    masterclasses = MasterClass.objects.filter(status='approved')
+    categories = Category.objects.all()
+    return render(request, 'main/catalog.html', {
+        'masterclasses': masterclasses,
+        'categories': categories
+    })
+
+
+@login_required
+def profile_view(request):
+    """Профиль пользователя"""
+    bookings = Booking.objects.filter(participant=request.user)
+    favorites = Favorite.objects.filter(user=request.user)
+    return render(request, 'main/profile.html', {
+        'bookings': bookings,
+        'favorites': favorites,
+        'user': request.user
+    })
+
+
+@login_required
+def favorites_list_view(request):
+    """Список избранного"""
+    favorites = Favorite.objects.filter(user=request.user)
+    return render(request, 'main/favorites.html', {'favorites': favorites})
+
+
+@login_required
+def create_masterclass_view(request):
+    """Создание мастер-класса (для организатора)"""
+    if request.user.role != 'organizer' and not request.user.is_admin:
+        return redirect('catalog')
+
+    categories = Category.objects.all()
+    if request.method == 'POST':
+        # Обработка создания мастер-класса
+        pass
+
+    return render(request, 'main/create_masterclass.html', {'categories': categories})

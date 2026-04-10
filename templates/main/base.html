@@ -3,175 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}МастерГрад{% endblock %}</title>
+    <title>{% block title %}MasterGrad{% endblock %}</title>
+
+    <!-- Шрифт Jost -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --soft-pink: #FFD1DC;
+            --soft-blue: #B5EAD7;
+            --soft-white: #FFF9F9;
+            --dark-text: #4A4A4A;
+            --light-gray: #F5F5F5;
+            --accent-pink: #E8A0B4;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
-            font-family: 'Jost', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e8f0fe 100%);
+            font-family: 'Jost', sans-serif;
+            background: var(--soft-white);
+            color: var(--dark-text);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
         }
 
-        /* Логотип - в левом верхнем углу */
-        .logo {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            z-index: 100;
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border-bottom: 1px solid var(--soft-pink);
         }
 
-        .logo a {
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .logo .master {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a1a1a;
-            letter-spacing: 1px;
-            line-height: 1.2;
-        }
-
-        .logo .grad {
-            font-size: 28px;
-            font-weight: 700;
-            color: #BC5A7F;
-            letter-spacing: 1px;
-            line-height: 1.2;
-        }
-
-        /* Контейнер для формы - центрирован по горизонтали, но с отступом сверху */
-        .container {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(188, 90, 127, 0.15);
-            width: 100%;
-            max-width: 500px;
-            padding: 40px;
-            border: 1px solid rgba(188, 90, 127, 0.3);
-
-            /* Центрирование по горизонтали, отступ сверху */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-            top: 120px;
-            margin-bottom: 120px;
         }
 
-        h2 {
-            text-align: center;
-            color: #1a1a1a;
-            margin-bottom: 30px;
-            font-size: 28px;
+        .logo {
+            font-size: 1.8rem;
             font-weight: 600;
+            color: var(--dark-text);
+            text-decoration: none;
+            letter-spacing: -0.5px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .logo span {
+            color: var(--accent-pink);
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-            font-size: 14px;
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        input, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            font-family: 'Jost', sans-serif;
-            transition: all 0.3s;
-            background: #ffffff;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #BC5A7F;
-            box-shadow: 0 0 0 3px rgba(188, 90, 127, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #BC5A7F;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: 'Jost', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #a14d6e;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(188, 90, 127, 0.3);
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .links a {
-            color: #BC5A7F;
+        .nav-links a {
+            color: var(--dark-text);
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.3s;
         }
 
-        .links a:hover {
-            text-decoration: underline;
+        .nav-links a:hover {
+            color: var(--accent-pink);
         }
 
-        .errorlist {
-            color: #e74c3c;
-            font-size: 13px;
-            margin-top: 5px;
-            list-style: none;
+        main {
+            flex: 1;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid var(--soft-pink);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--accent-pink);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-family: 'Jost', sans-serif;
+        }
+
+        .btn:hover {
+            background: #d48a9e;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--soft-blue);
+            color: var(--dark-text);
+        }
+
+        .btn-outline:hover {
+            background: var(--soft-blue);
+            color: var(--dark-text);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: white;
+            border-top: 1px solid var(--soft-pink);
+            margin-top: 2rem;
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark-text);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Jost', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
         }
 
         /* Кнопки выбора роли */
         .role-buttons {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .role-btn {
             flex: 1;
-            padding: 12px;
+            padding: 0.8rem;
             text-align: center;
-            background: #f5f5f5;
-            color: #333;
+            background: var(--light-gray);
             border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 500;
-            font-family: 'Jost', sans-serif;
         }
 
         .role-btn.active {
-            background: #BC5A7F;
+            background: var(--accent-pink);
             color: white;
-            border-color: #BC5A7F;
+            border-color: var(--accent-pink);
         }
 
         .hidden {
@@ -179,34 +217,93 @@
         }
 
         /* Сообщения об ошибках */
+        .errorlist {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            list-style: none;
+        }
+
         .alert {
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
             background: #fee;
             color: #e74c3c;
             border: 1px solid #fcc;
-            font-size: 14px;
         }
 
-        /* Дополнительные поля для организатора */
-        .organizer-fields {
-            transition: all 0.3s;
+        h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            color: var(--dark-text);
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .links a {
+            color: var(--accent-pink);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
         }
     </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Логотип в левом верхнем углу -->
-    <div class="logo">
-        <a href="/">
-            <div class="master">Мастер</div>
-            <div class="grad">Град</div>
-        </a>
-    </div>
+    <header class="header">
+        <nav class="nav">
+            <a href="{% url 'home' %}" class="logo">Master<span>Grad</span></a>
+            <div class="nav-links">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'catalog' %}">Каталог</a>
 
-    <div class="container">
+                    {% if user.role == 'organizer' or user.is_admin %}
+                        <a href="{% url 'create_masterclass' %}" style="color: var(--accent-pink);">✨ Создать</a>
+                    {% endif %}
+
+                    <a href="{% url 'profile' %}" style="display: flex; align-items: center; gap: 0.3rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-pink);">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Профиль
+                    </a>
+
+                    <a href="{% url 'favorites_list' %}" style="display: flex; align-items: center; gap: 0.3rem;" title="Избранное">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </a>
+
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="padding: 0.5rem 1rem; cursor: pointer; font-family: 'Jost', sans-serif; background: transparent; border: 2px solid var(--soft-blue); border-radius: 30px; color: var(--dark-text);">Выйти</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Войти</a>
+                    <a href="{% url 'register' %}" class="btn">Регистрация</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main>
         {% block content %}
         {% endblock %}
-    </div>
+    </main>
+
+    <footer>
+        <p>© 2026 MasterClass Hub — Найдите свой творческий путь</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
