@@ -139,12 +139,10 @@ class MasterClass(models.Model):
 
     @property
     def has_free_places(self):
-        """Есть ли свободные места"""
         return self.current_participants < self.max_participants
 
     @property
     def free_places(self):
-        """Количество свободных мест"""
         return self.max_participants - self.current_participants
 
 

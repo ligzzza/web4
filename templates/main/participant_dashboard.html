@@ -1,48 +1,60 @@
 {% extends 'main/base.html' %}
 
-{% block title %}Мой профиль - MasterClass Hub{% endblock %}
+{% block title %}Мой профиль - Участник{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 800px;">
-    <h2>👤 Мой профиль</h2>
-    
-    <div class="card" style="margin-bottom: 2rem;">
-        <h3>Личная информация</h3>
+<div class="container" style="max-width: 900px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">🎓 Мой профиль</h2>
+        <p style="color: #666;">Добро пожаловать, {{ user.first_name|default:user.username }}!</p>
+    </div>
+
+    <!-- Личная информация -->
+    <div class="info-card">
+        <h3>👤 Личная информация</h3>
         <p><strong>Имя:</strong> {{ user.first_name|default:"Не указано" }}</p>
         <p><strong>Фамилия:</strong> {{ user.last_name|default:"Не указано" }}</p>
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Телефон:</strong> {{ user.phone|default:"Не указан" }}</p>
     </div>
-    
-    <div class="card" style="margin-bottom: 2rem;">
-        <h3>📅 Мои бронирования</h3>
+
+    <!-- Мои записи -->
+    <div class="bookings-card">
+        <h3>📅 Мои записи</h3>
+
         {% if bookings %}
             {% for booking in bookings %}
-            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
-                <p><strong>{{ booking.masterclass.title }}</strong></p>
-                <p>📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }} • 📍 {{ booking.masterclass.city }}</p>
-                <p>💰 {{ booking.total_price }} ₽ • Статус: {{ booking.get_status_display }}</p>
+            <div class="booking-item">
+                <div class="booking-info">
+                    <strong>{{ booking.masterclass.title }}</strong>
+                    <div class="booking-details">
+                        📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
+                    </div>
+                    <div class="booking-date">
+                        📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
+                    </div>
+                    <div class="booking-status">
+                        <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
+                        <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
+                    </div>
+                </div>
+                <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
             </div>
             {% endfor %}
         {% else %}
-            <p>У вас пока нет бронирований</p>
-            <a href="{% url 'catalog' %}" class="btn">Перейти в каталог</a>
+            <p class="empty-message">У вас пока нет активных записей</p>
         {% endif %}
     </div>
-    
-    <div class="card">
-        <h3>❤️ Избранное</h3>
-        {% if favorites %}
-            {% for fav in favorites %}
-            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
-                <p><strong>{{ fav.masterclass.title }}</strong></p>
-                <p>📍 {{ fav.masterclass.city }} • 💰 {{ fav.masterclass.price }} ₽</p>
-                <a href="{% url 'masterclass_detail' fav.masterclass.id %}" class="btn-outline" style="display: inline-block; margin-top: 0.5rem;">Подробнее</a>
-            </div>
-            {% endfor %}
-        {% else %}
-            <p>У вас пока нет избранных мастер-классов</p>
-        {% endif %}
+
+    <!-- Кнопки действий -->
+    <div class="action-buttons">
+        <a href="{% url 'catalog' %}" class="btn">📚 Каталог</a>
+        <a href="{% url 'favorites_list' %}" class="btn-outline">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            Избранное
+        </a>
     </div>
 </div>
 {% endblock %}

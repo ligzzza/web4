@@ -209,19 +209,21 @@ class LogoutView(APIView):
 
 
 def register_view(request):
-    #if request.user.is_authenticated:
-    #   return redirect('/')
+    if request.user.is_authenticated:
+        if request.user.role == 'organizer':
+            return redirect('organizer_dashboard')
+        else:
+            return redirect('participant_dashboard')
 
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            # Перенаправление в зависимости от роли
             if user.role == 'organizer':
-                return redirect('/organizer/dashboard/')
+                return redirect('organizer_dashboard')
             else:
-                return redirect('/participant/dashboard/')
+                return redirect('participant_dashboard')
     else:
         form = RegisterForm()
 
@@ -229,8 +231,12 @@ def register_view(request):
 
 
 def login_view(request):
-    #if request.user.is_authenticated:
-    #    return redirect('/')
+    if request.user.is_authenticated:
+        # Если уже залогинен, перенаправляем на профиль
+        if request.user.role == 'organizer':
+            return redirect('organizer_dashboard')
+        else:
+            return redirect('participant_dashboard')
 
     error = None
     if request.method == 'POST':
@@ -243,9 +249,9 @@ def login_view(request):
                 login(request, user)
                 # Перенаправление в зависимости от роли
                 if user.role == 'organizer':
-                    return redirect('/organizer/dashboard/')
+                    return redirect('organizer_dashboard')
                 else:
-                    return redirect('/participant/dashboard/')
+                    return redirect('participant_dashboard')
             else:
                 error = 'Неверное имя пользователя или пароль'
     else:
@@ -261,9 +267,16 @@ def logout_view(request):
 
 @login_required
 def participant_dashboard(request):
-    """Страница для участника"""
-    return render(request, 'main/participant_dashboard.html', {'user': request.user})
+    """Страница участника с его бронированиями"""
+    from main.models import Booking
 
+    bookings = Booking.objects.filter(participant=request.user)
+
+    return render(request, 'main/participant_dashboard.html', {
+        'user': request.user,
+        'bookings': bookings,
+        'count': bookings.count(),
+    })
 
 @login_required
 def organizer_dashboard(request):
@@ -322,10 +335,6 @@ def logout_view(request):
     logout(request)
     return redirect('/login/')
 
-
-@login_required
-def participant_dashboard(request):
-    return render(request, 'main/participant_dashboard.html', {'user': request.user})
 
 
 @login_required
@@ -395,7 +404,8 @@ def catalog_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Данные для фильтров (списки уникальных значений)
-    cities = MasterClass.objects.filter(status='approved').values_list('city', flat=True).distinct()
+    # Данные для фильтров (списки уникальных значений)
+    cities = MasterClass.objects.filter(status='approved').values_list('city', flat=True).distinct().order_by('city')
     categories = Category.objects.all()
 
     # Сохраняем текущие параметры фильтрации для пагинации
@@ -593,34 +603,55 @@ def edit_masterclass_view(request, masterclass_id):
     })
 
 
+from django.http import JsonResponse
+
 @login_required
 def add_favorite_view(request, masterclass_id):
-    """Добавление в избранное"""
-    from .models import MasterClass, Favorite
-    masterclass = MasterClass.objects.get(id=masterclass_id)
-    Favorite.objects.get_or_create(user=request.user, masterclass=masterclass)
-    return redirect('masterclass_detail', masterclass_id=masterclass_id)
+    """Добавление в избранное (асинхронно)"""
+    if request.method == 'POST':
+        masterclass = get_object_or_404(MasterClass, id=masterclass_id)
+        favorite, created = Favorite.objects.get_or_create(
+            user=request.user,
+            masterclass=masterclass
+        )
+        return JsonResponse({'status': 'added', 'favorite': created})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 @login_required
 def remove_favorite_view(request, masterclass_id):
-    """Удаление из избранного"""
-    from .models import Favorite
-    Favorite.objects.filter(user=request.user, masterclass_id=masterclass_id).delete()
-    return redirect('masterclass_detail', masterclass_id=masterclass_id)
+    """Удаление из избранного (асинхронно)"""
+    if request.method == 'POST':
+        Favorite.objects.filter(
+            user=request.user,
+            masterclass_id=masterclass_id
+        ).delete()
+        return JsonResponse({'status': 'removed'})
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 @login_required
 def add_booking_view(request, masterclass_id):
     """Бронирование мастер-класса"""
-    from .models import MasterClass, Booking
-    masterclass = MasterClass.objects.get(id=masterclass_id)
+    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
-    # Проверка свободных мест
+    # Проверка: есть ли свободные места
     if masterclass.current_participants >= masterclass.max_participants:
-        return redirect('masterclass_detail', masterclass_id=masterclass_id)
+        messages.error(request, 'Свободные места закончились')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
-    Booking.objects.create(
+    # Проверка: не записан ли уже пользователь
+    existing_booking = Booking.objects.filter(
+        participant=request.user,
+        masterclass=masterclass
+    ).exists()
+
+    if existing_booking:
+        messages.error(request, 'Вы уже записаны на этот мастер-класс')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+
+    # Создаём бронирование
+    booking = Booking.objects.create(
         participant=request.user,
         masterclass=masterclass,
         status='confirmed',
@@ -629,12 +660,15 @@ def add_booking_view(request, masterclass_id):
         total_price=masterclass.price
     )
 
-    # Обновляем количество участников
+    # Увеличиваем количество участников в мастер-классе
     masterclass.current_participants += 1
-    masterclass.save()
+    masterclass.save(update_fields=['current_participants'])
 
-    return redirect('profile')
+    print(f"✅ Бронирование создано! ID: {booking.id}")
+    print(f"✅ Теперь участников: {masterclass.current_participants}")
 
+    messages.success(request, f'Вы успешно записались на мастер-класс "{masterclass.title}"!')
+    return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
 def custom_logout_view(request):
     """Выход из системы"""
@@ -744,3 +778,5 @@ def favorites_list_view(request):
 def profile_simple_view(request):
     """Простой профиль для теста"""
     return render(request, 'main/profile_simple.html', {'user': request.user})
+
+

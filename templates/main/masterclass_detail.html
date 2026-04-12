@@ -53,36 +53,26 @@
         </div>
 
         <!-- Кнопки действий -->
-        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
             {% if user.is_authenticated %}
                 {% if user.role == 'participant' %}
                     {% if is_booked %}
                         <button class="btn" disabled style="opacity: 0.6; background: #ccc;">✓ Вы уже записаны</button>
-                    else %}
+                    {% else %}
                         {% if masterclass.has_free_places %}
                             <a href="{% url 'add_booking' masterclass.id %}" class="btn">📝 Записаться ({{ masterclass.price }} ₽)</a>
                         {% else %}
                             <button class="btn" disabled style="opacity: 0.6; background: #ccc;">❌ Мест нет</button>
                         {% endif %}
                     {% endif %}
-
-                    <!-- Кнопка избранное -->
-                    {% if is_favorite %}
-                        <a href="{% url 'remove_favorite' masterclass.id %}" class="btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                            В избранном
-                        </a>
-                    {% else %}
-                        <a href="{% url 'add_favorite' masterclass.id %}" class="btn-outline" style="display: flex; align-items: center; gap: 0.5rem;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-pink)" stroke-width="1.5">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                            </svg>
-                            В избранное
-                        </a>
-                    {% endif %}
                 {% endif %}
+
+                <!-- Кнопка избранное (сердечко) -->
+                <button id="favorite-btn" data-masterclass-id="{{ masterclass.id }}" class="favorite-btn" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center;">
+                    <svg id="favorite-icon" width="28" height="28" viewBox="0 0 24 24" fill="{% if is_favorite %}var(--accent-pink){% else %}none{% endif %}" stroke="var(--accent-pink)" stroke-width="1.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
 
                 {% if can_edit %}
                     <a href="{% url 'edit_masterclass' masterclass.id %}" class="btn">✏️ Редактировать</a>
@@ -96,6 +86,7 @@
                 <a href="{% url 'login' %}" class="btn">Войдите, чтобы записаться</a>
             {% endif %}
         </div>
+    </div>
 
     <!-- Блок организатора (список участников) -->
     {% if participants_list and can_edit %}
@@ -135,4 +126,51 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    document.getElementById('favorite-btn')?.addEventListener('click', async function() {
+        const masterclassId = this.dataset.masterclassId;
+        const icon = document.getElementById('favorite-icon');
+        const isFilled = icon.getAttribute('fill') === 'var(--accent-pink)';
+
+        try {
+            const url = isFilled
+                ? `/favorite/${masterclassId}/remove/`
+                : `/favorite/${masterclassId}/add/`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                if (isFilled) {
+                    icon.setAttribute('fill', 'none');
+                } else {
+                    icon.setAttribute('fill', 'var(--accent-pink)');
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}
