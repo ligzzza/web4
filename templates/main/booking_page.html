@@ -1,0 +1,79 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Бронирование - {{ masterclass.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">📝 Бронирование</h2>
+        <p style="color: #666;">Заполните данные для записи</p>
+    </div>
+    
+    <div class="info-card" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">{{ masterclass.title }}</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <p><strong>📅 Дата:</strong> {{ masterclass.start_datetime|date:"d.m.Y H:i" }}</p>
+            <p><strong>📍 Место:</strong> {{ masterclass.city }}, {{ masterclass.address }}</p>
+            <p><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</p>
+            <p><strong>👥 Доступно мест:</strong> {{ max_participants }}</p>
+            <p><strong>💰 Цена за место:</strong> {{ masterclass.price }} ₽</p>
+        </div>
+    </div>
+    
+    <div class="info-card">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">Данные участника</h3>
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Ваше имя *</label>
+                <input type="text" name="participant_name" value="{{ user.first_name|default:'' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Ваш email *</label>
+                <input type="email" name="participant_email" value="{{ user.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Телефон *</label>
+                <input type="tel" name="participant_phone" value="{{ user.phone|default:'' }}" placeholder="+7 (999) 123-45-67" required>
+            </div>
+
+            <div class="form-group">
+                <label>Количество участников *</label>
+                <input type="number" name="participants_count" id="participantsCount" min="1" max="{{ max_participants }}" value="1" required>
+                <small>Максимум {{ max_participants }} мест</small>
+            </div>
+
+            <div class="form-group">
+                <label>Комментарий (необязательно)</label>
+                <textarea name="comment" rows="3" placeholder="Особые пожелания, аллергии и т.д."></textarea>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn" style="width: 100%;">Продолжить →</button>
+                <a href="{% url 'masterclass_detail' masterclass.id %}" class="btn-outline" style="display: block; text-align: center; margin-top: 1rem;">← Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    textarea {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+        resize: vertical;
+    }
+
+    textarea:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
+    }
+</style>
+{% endblock %}

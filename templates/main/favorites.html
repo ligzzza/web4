@@ -27,13 +27,16 @@
                         📅 {{ fav.masterclass.start_datetime|date:"d.m.Y H:i" }}
                     </p>
                 </div>
-                <div style="display: flex; gap: 0.8rem;">
+                <div style="display: flex; gap: 0.8rem; align-items: center;">
                     <a href="{% url 'masterclass_detail' fav.masterclass.id %}" class="btn" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">Подробнее</a>
-                    <a href="{% url 'remove_favorite' fav.masterclass.id %}" style="background: transparent; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center;" title="Удалить из избранного">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                    </a>
+                    <form method="post" action="{% url 'remove_favorite' fav.masterclass.id %}" style="display: inline; margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="favorite-remove-btn" style="background: none; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center;" title="Удалить из избранного">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endfor %}

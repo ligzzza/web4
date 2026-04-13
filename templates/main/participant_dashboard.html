@@ -11,11 +11,26 @@
 
     <!-- Личная информация -->
     <div class="info-card">
-        <h3>👤 Личная информация</h3>
-        <p><strong>Имя:</strong> {{ user.first_name|default:"Не указано" }}</p>
-        <p><strong>Фамилия:</strong> {{ user.last_name|default:"Не указано" }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Телефон:</strong> {{ user.phone|default:"Не указан" }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: var(--accent-pink); margin: 0;">👤 Личная информация</h3>
+            <button id="editProfileBtn" class="btn-small">✏️ Редактировать</button>
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
+            {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    👤
+                </div>
+            {% endif %}
+            <div style="flex: 1;">
+                <p><strong>Имя:</strong> <span id="display-first-name">{{ user.first_name|default:"Не указано" }}</span></p>
+                <p><strong>Фамилия:</strong> <span id="display-last-name">{{ user.last_name|default:"Не указано" }}</span></p>
+                <p><strong>Email:</strong> <span id="display-email">{{ user.email }}</span></p>
+                <p><strong>Телефон:</strong> <span id="display-phone">{{ user.phone|default:"Не указан" }}</span></p>
+            </div>
+        </div>
     </div>
 
     <!-- Мои записи -->
@@ -23,7 +38,7 @@
         <h3>📅 Мои записи</h3>
 
         {% if bookings %}
-            {% for booking in bookings %}
+            {% for booking in bookings|slice:":3" %}
             <div class="booking-item">
                 <div class="booking-info">
                     <strong>{{ booking.masterclass.title }}</strong>
@@ -41,6 +56,33 @@
                 <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
             </div>
             {% endfor %}
+
+            {% if bookings|length > 3 %}
+            <div class="show-more-container">
+                <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">📋 Показать все записи ({{ bookings|length }})</button>
+            </div>
+            <div id="hiddenBookings" style="display: none;">
+                {% for booking in bookings|slice:"3:" %}
+                <div class="booking-item">
+                    <div class="booking-info">
+                        <strong>{{ booking.masterclass.title }}</strong>
+                        <div class="booking-details">
+                            📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
+                        </div>
+                        <div class="booking-date">
+                            📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
+                        </div>
+                        <div class="booking-status">
+                            <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
+                            <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
+                </div>
+                {% endfor %}
+                <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">▲ Скрыть</button>
+            </div>
+            {% endif %}
         {% else %}
             <p class="empty-message">У вас пока нет активных записей</p>
         {% endif %}
@@ -57,4 +99,442 @@
         </a>
     </div>
 </div>
+
+<!-- Модальное окно редактирования профиля -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Редактирование профиля</h3>
+            <span class="close">&times;</span>
+        </div>
+
+        <div id="editMessage" class="message"></div>
+
+        <div class="modal-inner">
+            <form id="editProfileForm" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group avatar-group">
+                    <label>Фото профиля</label>
+                    <div class="current-avatar-preview">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Аватар" id="currentAvatar" class="avatar-preview-img">
+                        {% else %}
+                            <div id="currentAvatar" class="avatar-preview-placeholder">👤</div>
+                        {% endif %}
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <label for="avatar-upload" class="file-upload-label">
+                            <span class="upload-icon">📷</span>
+                            <span>Выбрать фото</span>
+                        </label>
+                        <input type="file" name="avatar" id="avatar-upload" accept="image/*" style="display: none;">
+                        <small class="upload-hint">JPG, PNG до 5MB</small>
+                    </div>
+                    <div id="newAvatarPreview" style="display: none; margin-top: 1rem;">
+                        <p style="font-size: 0.8rem; color: #888;">Новое фото:</p>
+                        <img id="newAvatarImg" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-pink);">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input type="text" name="first_name" id="edit-first-name" value="{{ user.first_name|default:'' }}" placeholder="Ваше имя">
+                </div>
+                <div class="form-group">
+                    <label>Фамилия</label>
+                    <input type="text" name="last_name" id="edit-last-name" value="{{ user.last_name|default:'' }}" placeholder="Ваша фамилия">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" id="edit-email" value="{{ user.email }}" placeholder="example@mail.ru" required>
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="tel" name="phone" id="edit-phone" value="{{ user.phone|default:'' }}" placeholder="+7 (999) 123-45-67">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit">Сохранить</button>
+                    <button type="button" class="cancel-btn">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Модальное окно
+    const modal = document.getElementById('editModal');
+    const editBtn = document.getElementById('editProfileBtn');
+    const closeSpan = document.querySelector('.close');
+    const cancelBtn = document.querySelector('.cancel-btn');
+
+    if (editBtn) {
+        editBtn.onclick = function() {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+            document.getElementById('edit-first-name').value = document.getElementById('display-first-name').innerText;
+            document.getElementById('edit-last-name').value = document.getElementById('display-last-name').innerText;
+            document.getElementById('edit-email').value = document.getElementById('display-email').innerText;
+            document.getElementById('edit-phone').value = document.getElementById('display-phone').innerText;
+        }
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        const msgDiv = document.getElementById('editMessage');
+        if (msgDiv) msgDiv.innerHTML = '';
+    }
+
+    if (closeSpan) closeSpan.onclick = closeModal;
+    if (cancelBtn) cancelBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // Предпросмотр нового аватара
+    const avatarInput = document.getElementById('avatar-upload');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewDiv = document.getElementById('newAvatarPreview');
+                    const previewImg = document.getElementById('newAvatarImg');
+                    previewImg.src = event.target.result;
+                    previewDiv.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Отправка формы через AJAX
+    const editForm = document.getElementById('editProfileForm');
+    if (editForm) {
+        editForm.onsubmit = async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/profile/edit-ajax/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('display-first-name').innerText = data.first_name || 'Не указано';
+                    document.getElementById('display-last-name').innerText = data.last_name || 'Не указано';
+                    document.getElementById('display-email').innerText = data.email;
+                    document.getElementById('display-phone').innerText = data.phone || 'Не указан';
+
+                    if (data.avatar_url) {
+                        const avatarContainer = document.querySelector('.info-card .current-avatar-preview');
+                        if (avatarContainer) {
+                            avatarContainer.innerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" class="avatar-preview-img">`;
+                        }
+                    }
+
+                    const msgDiv = document.getElementById('editMessage');
+                    msgDiv.innerHTML = '<div class="alert success">✅ Профиль обновлён!</div>';
+                    setTimeout(closeModal, 1500);
+                } else {
+                    document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+                }
+            } catch (error) {
+                document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+            }
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Показать все бронирования
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    const hiddenBookings = document.getElementById('hiddenBookings');
+    const hideBtn = document.getElementById('hideBtn');
+
+    if (showMoreBtn) {
+        showMoreBtn.onclick = function() {
+            hiddenBookings.style.display = 'block';
+            showMoreBtn.style.display = 'none';
+        }
+    }
+
+    if (hideBtn) {
+        hideBtn.onclick = function() {
+            hiddenBookings.style.display = 'none';
+            showMoreBtn.style.display = 'block';
+        }
+    }
+</script>
+
+<style>
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 480px;
+        max-height: 85vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border: 1px solid var(--soft-pink);
+    }
+
+    /* Стили для скроллбара */
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+        background: var(--soft-pink);
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+        background: var(--accent-pink);
+        border-radius: 10px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: #d48a9e;
+    }
+
+    .modal-inner {
+        padding: 0 2rem 2rem 2rem;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem 0.8rem 2rem;
+        border-bottom: 1px solid var(--soft-pink);
+    }
+
+    .modal-header h3 {
+        font-family: 'Jost', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--accent-pink);
+        margin: 0;
+    }
+
+    .close {
+        font-size: 1.8rem;
+        cursor: pointer;
+        color: #aaa;
+        transition: all 0.3s;
+    }
+
+    .close:hover {
+        color: var(--accent-pink);
+    }
+
+    .message {
+        margin: 1rem 2rem 0 2rem;
+    }
+
+    .modal .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .modal .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--dark-text);
+        font-family: 'Jost', sans-serif;
+    }
+
+    .modal .form-group input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+    }
+
+    .modal .form-group input:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .modal-buttons button {
+        flex: 1;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        padding: 0.8rem;
+        border-radius: 30px;
+        cursor: pointer;
+    }
+
+    .modal-buttons button:first-child {
+        background: var(--accent-pink);
+        color: white;
+        border: none;
+    }
+
+    .modal-buttons button:first-child:hover {
+        background: #d48a9e;
+    }
+
+    .modal-buttons button:last-child {
+        background: transparent;
+        border: 2px solid var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .alert.success {
+        background: #d4edda;
+        color: #155724;
+        padding: 0.8rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .alert.error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.8rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .btn-small {
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        border: none;
+    }
+
+    .btn-small:hover {
+        background: #a8d4c0;
+    }
+
+    /* Стили для загрузки аватара */
+    .avatar-group {
+        text-align: center;
+    }
+
+    .current-avatar-preview {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .avatar-preview-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-pink);
+    }
+
+    .avatar-preview-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        border: 3px solid var(--accent-pink);
+    }
+
+    .file-upload-wrapper {
+        text-align: center;
+    }
+
+    .file-upload-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .file-upload-label:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .upload-icon {
+        font-size: 1.2rem;
+    }
+
+    .upload-hint {
+        display: block;
+        margin-top: 0.5rem;
+        color: #888;
+        font-size: 0.7rem;
+    }
+</style>
 {% endblock %}

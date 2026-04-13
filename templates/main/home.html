@@ -3,37 +3,154 @@
 {% block title %}MasterClass Hub{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px;">
+<div class="home-container">
     <!-- Hero секция -->
-    <div style="text-align: center; padding: 3rem 0;">
-        <h1 style="font-size: 3rem; margin-bottom: 1rem;">Найди свой <span style="color: var(--accent-pink);">творческий путь</span></h1>
-        <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem auto;">Мастер-классы по кулинарии, танцам, рукоделию и многому другому</p>
-        <a href="{% url 'catalog' %}" class="btn" style="font-size: 1.1rem; padding: 1rem 2rem;">Смотреть каталог</a>
+    <div class="hero-section">
+        <h1>Найди свой <span class="highlight">творческий путь</span></h1>
+        <p>Мастер-классы по кулинарии, танцам, рукоделию и многому другому</p>
+    </div>
+    <!-- Статистика -->
+    <div class="stats-section">
+        <h2>MasterGrad в цифрах</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_masterclasses }}</div>
+                <div class="stat-label">мастер-классов<br>проведено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_participants }}</div>
+                <div class="stat-label">довольных<br>участников</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_organizers }}</div>
+                <div class="stat-label">организаторов<br>на платформе</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_cities }}</div>
+                <div class="stat-label">городов<br>присутствия</div>
+            </div>
+        </div>
     </div>
 
-
-    <!-- Список мастер-классов -->
-    <h2 style="margin-bottom: 2rem;">Популярные мастер-классы</h2>
-    <div class="grid">
-        {% for mc in masterclasses %}
-        <div class="card">
-            {% with mc.images.first as main_image %}
-                {% if main_image %}
-                    <img src="{{ main_image.image.url }}" alt="{{ mc.title }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem;">
-                {% else %}
-                    <div style="width: 100%; height: 200px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); border-radius: 12px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: white;">
-                        📷 Скоро здесь будет фото
-                    </div>
-                {% endif %}
-            {% endwith %}
-            <h3>{{ mc.title }}</h3>
-            <p>📍 {{ mc.city }} • 💰 {{ mc.price }} ₽</p>
-            <p>📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}</p>
-            <a href="{% url 'masterclass_detail' mc.id %}" class="btn" style="margin-top: 1rem; display: block; text-align: center;">Подробнее</a>
+    <!-- Преимущества -->
+    <div class="features-section">
+        <h2>Почему выбирают нас</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Удобный поиск</h3>
+                <p>Фильтруйте мастер-классы по городу, дате, цене и категории</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <h3>Безопасная оплата</h3>
+                <p>Онлайн-оплата и защита ваших данных</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Честные отзывы</h3>
+                <p>Реальные оценки от участников мастер-классов</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Быстрая запись</h3>
+                <p>Забронируйте место в несколько кликов</p>
+            </div>
         </div>
-        {% empty %}
-        <p>Пока нет мастер-классов</p>
-        {% endfor %}
+    </div>
+    <!-- Лучшие по отзывам -->
+    <div class="section">
+        <h2>🏆 Лучшие по отзывам</h2>
+        <p class="section-subtitle">Мастер-классы с наивысшим рейтингом</p>
+
+        {% if top_masterclasses %}
+            <div class="top-grid">
+                {% for mc in top_masterclasses %}
+                <div class="top-card">
+                    <div class="top-badge">⭐ {{ mc.avg_rating|floatformat:1 }}</div>
+                    <div class="top-rank">#{{ forloop.counter }}</div>
+                    {% with mc.images.first as main_image %}
+                        {% if main_image %}
+                            <img src="{{ main_image.image.url }}" alt="{{ mc.title }}" class="top-image">
+                        {% else %}
+                            <div class="top-image-placeholder">📷</div>
+                        {% endif %}
+                    {% endwith %}
+                    <div class="top-content">
+                        <h3>{{ mc.title }}</h3>
+                        <p class="top-city">📍 {{ mc.city }}</p>
+                        <p class="top-price">{{ mc.price }} ₽</p>
+                        <div class="top-review-info">
+                            <span>⭐ {{ mc.avg_rating|floatformat:1 }}</span>
+                            <span>{{ mc.reviews_count }} отзывов</span>
+                        </div>
+                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-message">Пока нет мастер-классов с отзывами</p>
+        {% endif %}
+    </div>
+
+    <!-- Популярные по количеству записей -->
+    <div class="section">
+        <h2>🔥 Популярные</h2>
+        <p class="section-subtitle">Самые востребованные мастер-классы</p>
+
+        {% if popular_masterclasses %}
+            <div class="popular-grid">
+                {% for mc in popular_masterclasses %}
+                <div class="popular-card">
+                    <div class="popular-rank">#{{ forloop.counter }}</div>
+                    {% with mc.images.first as main_image %}
+                        {% if main_image %}
+                            <img src="{{ main_image.image.url }}" alt="{{ mc.title }}" class="popular-image">
+                        {% else %}
+                            <div class="popular-image-placeholder">📷</div>
+                        {% endif %}
+                    {% endwith %}
+                    <div class="popular-content">
+                        <h3>{{ mc.title }}</h3>
+                        <p class="popular-city">📍 {{ mc.city }}</p>
+                        <div class="popular-stats">
+                            <span>👥 {{ mc.current_participants }}/{{ mc.max_participants }}</span>
+                            <span>💰 {{ mc.price }} ₽</span>
+                        </div>
+                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-message">Пока нет популярных мастер-классов</p>
+        {% endif %}
+    </div>
+
+    <!-- Категории -->
+    <div class="section">
+        <h2>📂 Категории</h2>
+
+        {% if categories %}
+            <div class="categories-grid">
+                {% for cat in categories %}
+                <a href="{% url 'catalog' %}?category={{ cat.id }}" class="category-card">
+                    <div class="category-icon">
+                        {% if cat.name == 'Кулинария' %}🍳
+                        {% elif cat.name == 'Творчество' %}🎨
+                        {% elif cat.name == 'Рукоделие' %}🧵
+                        {% elif cat.name == 'Танцы' %}💃
+                        {% elif cat.name == 'Музыка' %}🎵
+                        {% elif cat.name == 'Спорт' %}🏃
+                        {% else %}📚
+                        {% endif %}
+                    </div>
+                    <span>{{ cat.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

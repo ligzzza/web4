@@ -36,4 +36,7 @@ urlpatterns = [
     path('participant/dashboard/', views.participant_dashboard, name='participant_dashboard'),
     path('organizer/dashboard/', views.organizer_dashboard, name='organizer_dashboard'),
     path('profile-simple/', views.profile_simple_view, name='profile_simple'),
+    path('profile/edit-ajax/', views.edit_profile_ajax, name='edit_profile_ajax'),
+    path('booking/<int:masterclass_id>/', views.booking_page_view, name='booking_page'),
+    path('payment/<int:masterclass_id>/', views.payment_page_view, name='payment_page'),
 ]

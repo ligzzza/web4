@@ -5,8 +5,9 @@
 
 {% block content %}
 <div class="container" style="max-width: 1000px;">
-    <!-- Навигация назад -->
-    <a href="{% url 'catalog' %}" style="color: var(--accent-pink); text-decoration: none;">← Назад к каталогу</a>
+    <a href="javascript:history.back()" style="color: var(--accent-pink); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+        ← Назад
+    </a>
 
     <!-- Основная информация -->
     <div class="card" style="margin-top: 1rem;">
@@ -60,7 +61,7 @@
                         <button class="btn" disabled style="opacity: 0.6; background: #ccc;">✓ Вы уже записаны</button>
                     {% else %}
                         {% if masterclass.has_free_places %}
-                            <a href="{% url 'add_booking' masterclass.id %}" class="btn">📝 Записаться ({{ masterclass.price }} ₽)</a>
+                            <a href="{% url 'booking_page' masterclass.id %}" class="btn">Записаться ({{ masterclass.price }} ₽)</a>
                         {% else %}
                             <button class="btn" disabled style="opacity: 0.6; background: #ccc;">❌ Мест нет</button>
                         {% endif %}
