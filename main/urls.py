@@ -39,4 +39,5 @@ urlpatterns = [
     path('profile/edit-ajax/', views.edit_profile_ajax, name='edit_profile_ajax'),
     path('booking/<int:masterclass_id>/', views.booking_page_view, name='booking_page'),
     path('payment/<int:masterclass_id>/', views.payment_page_view, name='payment_page'),
+    path('booking/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
 ]

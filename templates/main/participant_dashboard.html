@@ -37,8 +37,35 @@
     <div class="bookings-card">
         <h3>📅 Мои записи</h3>
 
-        {% if bookings %}
-            {% for booking in bookings|slice:":3" %}
+ {% if bookings %}
+    {% for booking in bookings|slice:":3" %}
+    <div class="booking-item">
+        <div class="booking-info">
+            <strong>{{ booking.masterclass.title }}</strong>
+            <div class="booking-details">
+                📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
+            </div>
+            <div class="booking-date">
+                📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
+            </div>
+            <div class="booking-status">
+                <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
+                <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
+            </div>
+        </div>
+        <div class="booking-actions">
+            <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
+            <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn">Отменить</a>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if bookings|length > 3 %}
+        <div class="show-more-container">
+            <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">📋 Показать все записи ({{ bookings|length }})</button>
+        </div>
+        <div id="hiddenBookings" style="display: none;">
+            {% for booking in bookings|slice:"3:" %}
             <div class="booking-item">
                 <div class="booking-info">
                     <strong>{{ booking.masterclass.title }}</strong>
@@ -53,50 +80,18 @@
                         <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
                     </div>
                 </div>
-                <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
+                <div class="booking-actions">
+                    <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
+                    <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn">Отменить</a>
+                </div>
             </div>
             {% endfor %}
-
-            {% if bookings|length > 3 %}
-            <div class="show-more-container">
-                <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">📋 Показать все записи ({{ bookings|length }})</button>
-            </div>
-            <div id="hiddenBookings" style="display: none;">
-                {% for booking in bookings|slice:"3:" %}
-                <div class="booking-item">
-                    <div class="booking-info">
-                        <strong>{{ booking.masterclass.title }}</strong>
-                        <div class="booking-details">
-                            📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
-                        </div>
-                        <div class="booking-date">
-                            📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
-                        </div>
-                        <div class="booking-status">
-                            <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
-                            <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
-                        </div>
-                    </div>
-                    <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
-                </div>
-                {% endfor %}
-                <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">▲ Скрыть</button>
-            </div>
-            {% endif %}
-        {% else %}
-            <p class="empty-message">У вас пока нет активных записей</p>
+            <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">▲ Скрыть</button>
+        </div>
         {% endif %}
-    </div>
-
-    <!-- Кнопки действий -->
-    <div class="action-buttons">
-        <a href="{% url 'catalog' %}" class="btn">📚 Каталог</a>
-        <a href="{% url 'favorites_list' %}" class="btn-outline">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent-pink)" stroke="var(--accent-pink)" stroke-width="1.5">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-            Избранное
-        </a>
+    {% else %}
+        <p class="empty-message">У вас пока нет активных записей</p>
+    {% endif %}
     </div>
 </div>
 
@@ -535,6 +530,40 @@
         margin-top: 0.5rem;
         color: #888;
         font-size: 0.7rem;
+    }
+    .booking-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    }
+
+    .booking-actions .btn-small {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+        .booking-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .booking-actions {
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .booking-actions .btn-small {
+            flex: 1;
+            text-align: center;
+        }
+    }
+    .cancel-btn {
+        background: #e74c3c !important;
+        color: white !important;
+    }
+
+    .cancel-btn:hover {
+        background: #c0392b !important;
     }
 </style>
 {% endblock %}

@@ -268,15 +268,22 @@ def logout_view(request):
 @login_required
 def participant_dashboard(request):
     """Страница участника с его бронированиями"""
-    from main.models import Booking
 
-    bookings = Booking.objects.filter(participant=request.user)
+    # Показываем только активные бронирования (не отменённые)
+    bookings = Booking.objects.filter(
+        participant=request.user
+    ).exclude(
+        status='cancelled'
+    ).order_by('-created_at')
 
-    return render(request, 'main/participant_dashboard.html', {
+    print(f"=== УЧАСТНИК: {request.user.username} ===")
+    print(f"Всего активных бронирований: {bookings.count()}")
+
+    context = {
         'user': request.user,
         'bookings': bookings,
-        'count': bookings.count(),
-    })
+    }
+    return render(request, 'main/participant_dashboard.html', context)
 
 
 @login_required
@@ -564,7 +571,12 @@ def masterclass_detail_view(request, masterclass_id):
         is_favorite = Favorite.objects.filter(user=request.user, masterclass=masterclass).exists()
 
         # Проверка бронирования
-        is_booked = Booking.objects.filter(participant=request.user, masterclass=masterclass).exists()
+        # Стало:
+        is_booked = Booking.objects.filter(
+            participant=request.user,
+            masterclass=masterclass,
+            status__in=['pending', 'confirmed']  # Только активные бронирования
+        ).exists()
 
         # Проверка прав на редактирование/удаление
         can_edit = (request.user == masterclass.organizer) or request.user.is_admin
@@ -674,10 +686,11 @@ def add_booking_view(request, masterclass_id):
         messages.error(request, 'Свободные места закончились')
         return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
-    # Проверка: не записан ли уже пользователь
+    # Проверка: есть ли АКТИВНОЕ бронирование (не отменённое)
     existing_booking = Booking.objects.filter(
         participant=request.user,
-        masterclass=masterclass
+        masterclass=masterclass,
+        status__in=['pending', 'confirmed']  # Только активные
     ).exists()
 
     if existing_booking:
@@ -694,12 +707,9 @@ def add_booking_view(request, masterclass_id):
         total_price=masterclass.price
     )
 
-    # Увеличиваем количество участников в мастер-классе
+    # Увеличиваем количество участников
     masterclass.current_participants += 1
-    masterclass.save(update_fields=['current_participants'])
-
-    print(f"✅ Бронирование создано! ID: {booking.id}")
-    print(f"✅ Теперь участников: {masterclass.current_participants}")
+    masterclass.save()
 
     messages.success(request, f'Вы успешно записались на мастер-класс "{masterclass.title}"!')
     return redirect('masterclass_detail', masterclass_id=masterclass.id)
@@ -940,3 +950,79 @@ def payment_page_view(request, masterclass_id):
         'comment': booking_data.get('comment', ''),
     }
     return render(request, 'main/payment_page.html', context)
+
+
+from datetime import timedelta
+from django.utils import timezone
+from django.contrib import messages
+from django.db import transaction
+
+
+@login_required
+def cancel_booking_view(request, booking_id):
+    """Отмена бронирования"""
+    print("=== cancel_booking_view ВЫЗВАНА ===")
+    print(f"Booking ID: {booking_id}")
+    print(f"Method: {request.method}")
+
+    booking = get_object_or_404(Booking, id=booking_id, participant=request.user)
+    print(f"Booking found: {booking.id}, masterclass: {booking.masterclass.title}")
+
+    masterclass = booking.masterclass
+
+    # Проверка: можно ли отменить (за 24 часа до начала)
+    time_until_start = masterclass.start_datetime - timezone.now()
+    can_cancel = time_until_start > timedelta(hours=24)
+    print(f"Can cancel: {can_cancel}, hours left: {time_until_start.total_seconds() / 3600}")
+
+    if request.method == 'POST':
+        print("=== ОБРАБОТКА POST ===")
+
+        if not can_cancel:
+            print("Отмена запрещена: менее 24 часов")
+            messages.error(request, 'Отмена невозможна: до начала мастер-класса осталось менее 24 часов')
+            return redirect('participant_dashboard')
+
+        if booking.status == 'cancelled':
+            print("Бронирование уже отменено")
+            messages.error(request, 'Эта запись уже отменена')
+            return redirect('participant_dashboard')
+
+        try:
+            with transaction.atomic():
+                print("Отменяем бронирование...")
+                booking.status = 'cancelled'
+                booking.payment_status = 'refunded'
+                booking.save()
+                print(f"Booking saved, new status: {booking.status}")
+
+                print(f"Current participants before: {masterclass.current_participants}")
+                masterclass.refresh_from_db()
+                print(f"Current participants after refresh: {masterclass.current_participants}")
+
+                masterclass.current_participants -= booking.participants_count
+                print(f"After subtract: {masterclass.current_participants}")
+
+                if masterclass.current_participants < 0:
+                    masterclass.current_participants = 0
+                    print("Set to 0 because negative")
+
+                masterclass.save(update_fields=['current_participants'])
+                print(f"Masterclass saved, new participants: {masterclass.current_participants}")
+
+                messages.success(request,
+                                 f'Запись на мастер-класс "{masterclass.title}" отменена. Деньги будут возвращены в течение 3-5 рабочих дней.')
+                print("SUCCESS")
+        except Exception as e:
+            print(f"ERROR: {e}")
+            messages.error(request, f'Ошибка при отмене: {str(e)}')
+
+        return redirect('participant_dashboard')
+
+    print("=== GET REQUEST ===")
+    context = {
+        'booking': booking,
+        'can_cancel': can_cancel,
+        'hours_left': int(time_until_start.total_seconds() / 3600) if not can_cancel else 0,
+    }
+    return render(request, 'main/cancel_booking.html', context)

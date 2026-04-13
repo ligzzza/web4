@@ -204,7 +204,7 @@ class Booking(models.Model):
         verbose_name = "Бронирование"
         verbose_name_plural = "Бронирования"
         ordering = ['-created_at']
-        unique_together = ['participant', 'masterclass']  # Запрет повторной записи на одно мероприятие
+        #unique_together = ['participant', 'masterclass']  # Запрет повторной записи на одно мероприятие
 
     def __str__(self):
         return f"{self.participant.get_full_name()} → {self.masterclass.title}"
