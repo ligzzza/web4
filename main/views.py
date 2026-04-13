@@ -776,41 +776,32 @@ def delete_masterclass_view(request, masterclass_id):
     return render(request, 'main/confirm_delete.html', {'masterclass': masterclass})
 
 
+@login_required
 def add_review_view(request, masterclass_id):
-    """Добавление отзыва на мастер-класс"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-
-    # Проверка: можно ли оставить отзыв
-    user_booking = Booking.objects.filter(
-        participant=request.user,
-        masterclass=masterclass,
-        status='completed'
-    ).first()
-
-    if not user_booking:
-        messages.error(request, 'Вы можете оставить отзыв только после посещения мастер-класса.')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    if Review.objects.filter(author=request.user, masterclass=masterclass).exists():
-        messages.error(request, 'Вы уже оставили отзыв на этот мастер-класс.')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     if request.method == 'POST':
         rating = int(request.POST.get('rating', 5))
         text = request.POST.get('text', '')
 
-        review = Review.objects.create(
-            author=request.user,
+        user_booking = Booking.objects.filter(
+            participant=request.user,
             masterclass=masterclass,
-            booking=user_booking,
-            rating=rating,
-            text=text,
-            status='approved'
-        )
-        messages.success(request, 'Спасибо за ваш отзыв!')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+            status='completed'
+        ).first()
 
-    return render(request, 'main/add_review.html', {'masterclass': masterclass})
+        if user_booking and not Review.objects.filter(author=request.user, masterclass=masterclass).exists():
+            Review.objects.create(
+                author=request.user,
+                masterclass=masterclass,
+                booking=user_booking,
+                rating=rating,
+                text=text,
+                status='approved'
+            )
+
+    return redirect('masterclass_detail', masterclass_id=masterclass.id)
+
 
 @login_required
 def favorites_list_view(request):
@@ -1026,3 +1017,33 @@ def cancel_booking_view(request, booking_id):
         'hours_left': int(time_until_start.total_seconds() / 3600) if not can_cancel else 0,
     }
     return render(request, 'main/cancel_booking.html', context)
+
+
+from django.http import JsonResponse
+
+
+def edit_review_view(request, review_id):
+    review = get_object_or_404(Review, id=review_id, author=request.user)
+    masterclass = review.masterclass
+
+    if request.method == 'POST':
+        rating = int(request.POST.get('rating', 5))
+        text = request.POST.get('text', '')
+        review.rating = rating
+        review.text = text
+        review.save()
+        messages.success(request, 'Отзыв обновлён')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+
+    return render(request, 'main/edit_review.html', {
+        'review': review,
+        'masterclass': masterclass
+    })
+
+
+def delete_review_view(request, review_id):
+    review = get_object_or_404(Review, id=review_id, author=request.user)
+    masterclass_id = review.masterclass.id
+    review.delete()
+    messages.success(request, 'Отзыв удалён')
+    return redirect('masterclass_detail', masterclass_id=masterclass_id)

@@ -61,7 +61,7 @@
                         <button class="btn" disabled style="opacity: 0.6; background: #ccc;">✓ Вы уже записаны</button>
                     {% else %}
                         {% if masterclass.has_free_places %}
-                            <a href="{% url 'booking_page' masterclass.id %}" class="btn">Записаться ({{ masterclass.price }} ₽)</a>
+                            <a href="{% url 'booking_page' masterclass.id %}" class="btn">📝 Записаться ({{ masterclass.price }} ₽)</a>
                         {% else %}
                             <button class="btn" disabled style="opacity: 0.6; background: #ccc;">❌ Мест нет</button>
                         {% endif %}
@@ -78,10 +78,6 @@
                 {% if can_edit %}
                     <a href="{% url 'edit_masterclass' masterclass.id %}" class="btn">✏️ Редактировать</a>
                     <a href="{% url 'delete_masterclass' masterclass.id %}" class="btn" style="background: #e74c3c; color: white;">🗑️ Удалить</a>
-                {% endif %}
-
-                {% if can_review %}
-                    <a href="{% url 'add_review' masterclass.id %}" class="btn-outline">⭐ Написать отзыв</a>
                 {% endif %}
             {% else %}
                 <a href="{% url 'login' %}" class="btn">Войдите, чтобы записаться</a>
@@ -107,28 +103,91 @@
 
         {% if reviews %}
             {% for review in reviews %}
-            <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="review-{{ review.id }}" class="review-item" style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                <div class="review-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                     <div>
                         <strong>{{ review.author.first_name }} {{ review.author.last_name }}</strong>
-                        <span style="color: #f5a623;">
+                        <span id="review-stars-{{ review.id }}" class="review-stars" style="color: #f5a623;">
                             {% for i in "12345"|make_list %}
                                 {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
                             {% endfor %}
                         </span>
+                        <small style="color: #888; margin-left: 0.5rem;">{{ review.created_at|date:"d.m.Y" }}</small>
+                        {% if review.updated_at != review.created_at %}
+                            <small style="color: #aaa;">(отредактировано)</small>
+                        {% endif %}
                     </div>
-                    <small style="color: #888;">{{ review.created_at|date:"d.m.Y" }}</small>
+
+                    <!-- Кнопки редактирования/удаления (только для автора) -->
+                    {% if user.is_authenticated and user == review.author %}
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="showEditForm({{ review.id }}, {{ review.rating }}, `{{ review.text|escapejs }}`)" class="btn-small" style="background: var(--soft-blue);">✏️ Редактировать</button>
+                        <a href="{% url 'delete_review' review.id %}" class="btn-small" style="background: #e74c3c; color: white;" onclick="return confirm('Удалить отзыв?')">🗑️ Удалить</a>
+                    </div>
+                    {% endif %}
                 </div>
-                <p style="margin-top: 0.5rem;">{{ review.text }}</p>
+                <p id="review-text-{{ review.id }}" class="review-text" style="margin-top: 0.5rem;">{{ review.text }}</p>
+
+                <!-- Форма редактирования (скрыта по умолчанию) -->
+                <div id="edit-form-{{ review.id }}" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #eee;">
+                    <form method="post" action="{% url 'edit_review' review.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Оценка:</label>
+                            <select id="edit-rating-{{ review.id }}" name="rating" style="width: 100%; padding: 0.5rem; border-radius: 10px;">
+                                <option value="5">5 - Отлично</option>
+                                <option value="4">4 - Хорошо</option>
+                                <option value="3">3 - Средне</option>
+                                <option value="2">2 - Плохо</option>
+                                <option value="1">1 - Ужасно</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Текст отзыва:</label>
+                            <textarea id="edit-text-{{ review.id }}" name="text" rows="3" style="width: 100%; padding: 0.5rem; border-radius: 10px;"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button type="submit" class="btn-small">💾 Сохранить</button>
+                            <button type="button" onclick="hideEditForm({{ review.id }})" class="btn-small" style="background: #ccc;">Отмена</button>
+                        </div>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         {% else %}
             <p>Пока нет отзывов. Будьте первым, кто оставит отзыв!</p>
         {% endif %}
     </div>
+
+    <!-- Форма добавления отзыва -->
+    {% if can_review %}
+    <div class="card" style="margin-top: 2rem; background: #f9f9f9;">
+        <h3>✍️ Оставить отзыв</h3>
+        <form method="post" action="{% url 'add_review' masterclass.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Ваша оценка:</label>
+                <select name="rating" required style="width: 100%; padding: 0.5rem; border-radius: 10px;">
+                    <option value="5">5 - Отлично</option>
+                    <option value="4">4 - Хорошо</option>
+                    <option value="3">3 - Средне</option>
+                    <option value="2">2 - Плохо</option>
+                    <option value="1">1 - Ужасно</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ваш отзыв:</label>
+                <textarea name="text" rows="4" placeholder="Поделитесь впечатлениями..." required style="width: 100%; padding: 0.5rem; border-radius: 10px;"></textarea>
+            </div>
+            <button type="submit" class="btn">⭐ Отправить отзыв</button>
+        </form>
+    </div>
+    {% endif %}
+
 </div>
 
 <script>
+    // Избранное
     document.getElementById('favorite-btn')?.addEventListener('click', async function() {
         const masterclassId = this.dataset.masterclassId;
         const icon = document.getElementById('favorite-icon');
@@ -173,5 +232,56 @@
         }
         return cookieValue;
     }
+
+    // Показать форму редактирования
+    function showEditForm(reviewId, currentRating, currentText) {
+        const editForm = document.getElementById('edit-form-' + reviewId);
+        const reviewText = document.getElementById('review-text-' + reviewId);
+        const reviewStars = document.getElementById('review-stars-' + reviewId);
+
+        document.getElementById('edit-rating-' + reviewId).value = currentRating;
+        document.getElementById('edit-text-' + reviewId).value = currentText;
+
+        editForm.style.display = 'block';
+        reviewText.style.display = 'none';
+        reviewStars.style.display = 'none';
+    }
+
+    // Скрыть форму редактирования
+    function hideEditForm(reviewId) {
+        const editForm = document.getElementById('edit-form-' + reviewId);
+        const reviewText = document.getElementById('review-text-' + reviewId);
+        const reviewStars = document.getElementById('review-stars-' + reviewId);
+
+        editForm.style.display = 'none';
+        reviewText.style.display = 'block';
+        reviewStars.style.display = 'inline';
+    }
 </script>
+
+<style>
+    .favorite-btn {
+        transition: transform 0.2s ease;
+    }
+    .favorite-btn:hover {
+        transform: scale(1.1);
+    }
+    .favorite-btn:active {
+        transform: scale(0.95);
+    }
+    .btn-small {
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        border: none;
+    }
+    .review-item {
+        transition: all 0.2s;
+    }
+</style>
 {% endblock %}

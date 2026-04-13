@@ -17,6 +17,7 @@ urlpatterns = [
     path('api/login/', views.LoginView.as_view(), name='api_login'),
     path('api/logout/', views.LogoutView.as_view(), name='api_logout'),
 
+    # Web страницы
     path('', views.home_view, name='home'),
     path('catalog/', views.catalog_view, name='catalog'),
     path('profile/', views.profile_view, name='profile'),
@@ -32,12 +33,13 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-# Добавьте эти строки в urlpatterns (в конец списка)
     path('participant/dashboard/', views.participant_dashboard, name='participant_dashboard'),
     path('organizer/dashboard/', views.organizer_dashboard, name='organizer_dashboard'),
-    path('profile-simple/', views.profile_simple_view, name='profile_simple'),
-    path('profile/edit-ajax/', views.edit_profile_ajax, name='edit_profile_ajax'),
     path('booking/<int:masterclass_id>/', views.booking_page_view, name='booking_page'),
     path('payment/<int:masterclass_id>/', views.payment_page_view, name='payment_page'),
     path('booking/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
+
+    # Отзывы - редактирование и удаление
+    path('review/<int:review_id>/edit/', views.edit_review_view, name='edit_review'),
+    path('review/<int:review_id>/delete/', views.delete_review_view, name='delete_review'),
 ]

@@ -1016,6 +1016,26 @@
         .favorite-remove-btn:active {
             transform: scale(0.95);
         }
+        .rating-input select {
+            padding: 0.5rem;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            font-family: 'Jost', sans-serif;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Jost', sans-serif;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-pink);
+        }
     </style>
 
     {% block extra_head %}{% endblock %}

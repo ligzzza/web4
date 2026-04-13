@@ -1,0 +1,30 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Редактировать отзыв{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <h2>✏️ Редактировать отзыв</h2>
+    <p>О мастер-классе: <strong>{{ masterclass.title }}</strong></p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Оценка:</label>
+            <select name="rating" class="form-control">
+                <option value="5" {% if review.rating == 5 %}selected{% endif %}>5 - Отлично</option>
+                <option value="4" {% if review.rating == 4 %}selected{% endif %}>4 - Хорошо</option>
+                <option value="3" {% if review.rating == 3 %}selected{% endif %}>3 - Средне</option>
+                <option value="2" {% if review.rating == 2 %}selected{% endif %}>2 - Плохо</option>
+                <option value="1" {% if review.rating == 1 %}selected{% endif %}>1 - Ужасно</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Текст отзыва:</label>
+            <textarea name="text" rows="5" class="form-control" required>{{ review.text }}</textarea>
+        </div>
+        <button type="submit" class="btn">💾 Сохранить</button>
+        <a href="{% url 'masterclass_detail' masterclass.id %}" class="btn-outline">Отмена</a>
+    </form>
+</div>
+{% endblock %}
