@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
-from .models import MasterClass, Category, Booking, Review, Favorite, Notification, Image
+from .models import MasterClass, Category, Booking, Review, Favorite, Notification, Image, Session
 from .serializers import (
     MasterClassSerializer, CategorySerializer, BookingSerializer,
     ReviewSerializer, FavoriteSerializer, UserSerializer, RegisterSerializer
@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required  # 👈 ЭТО ВАЖ�
 from django.shortcuts import get_object_or_404  # 👈 ЭТО ВАЖНО!
 from django.contrib import messages  # 👈 ЭТО ВАЖНО!
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Min
 from django.db.models import Avg, Count
 
 
@@ -291,6 +291,10 @@ def organizer_dashboard(request):
     """Страница организатора с его мастер-классами"""
     my_masterclasses = MasterClass.objects.filter(organizer=request.user).order_by('-created_at')
 
+    # Для каждого мастер-класса добавляем первый сеанс
+    for mc in my_masterclasses:
+        mc.first_session = mc.sessions.filter(status='active').order_by('start_datetime').first()
+
     context = {
         'user': request.user,
         'my_masterclasses': my_masterclasses,
@@ -370,10 +374,12 @@ def home_view(request):
         reviews_count__gt=0
     ).order_by('-avg_rating')[:2]
 
-    # Популярные по количеству участников
+    # Популярные по количеству участников (через сеансы)
     popular_masterclasses = MasterClass.objects.filter(
         status='approved'
-    ).order_by('-current_participants')[:3]
+    ).annotate(
+        total_participants=Sum('sessions__current_participants')
+    ).order_by('-total_participants')[:3]
 
     # Статистика
     total_masterclasses = MasterClass.objects.filter(status='approved').count()
@@ -394,6 +400,7 @@ def home_view(request):
     }
     return render(request, 'main/home.html', context)
 
+from django.db.models import Avg, Count, Sum, Min, Q, F
 
 def catalog_view(request):
     """Каталог мастер-классов с фильтрацией, поиском и пагинацией"""
@@ -401,14 +408,13 @@ def catalog_view(request):
     # Базовый запрос — только одобренные мастер-классы
     masterclasses = MasterClass.objects.filter(status='approved')
 
-    # 1. ПОИСК по названию и описанию (ДОЛЖЕН РАБОТАТЬ)
+    # 1. ПОИСК по названию и описанию
     search_query = request.GET.get('search', '').strip()
     if search_query:
         masterclasses = masterclasses.filter(
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         )
-        print(f"Поиск: '{search_query}', найдено: {masterclasses.count()}")  # Для отладки
 
     # 2. ФИЛЬТР по городу
     city_filter = request.GET.get('city', '')
@@ -425,25 +431,32 @@ def catalog_view(request):
     if category_filter and category_filter.isdigit():
         masterclasses = masterclasses.filter(category_id=int(category_filter))
 
+    # Аннотируем только минимальную дату для сортировки
+    masterclasses = masterclasses.annotate(
+        nearest_start=Min('sessions__start_datetime')
+    )
 
-    # 7. СОРТИРОВКА
+    # СОРТИРОВКА
     sort_by = request.GET.get('sort', 'date')
     if sort_by == 'price_asc':
         masterclasses = masterclasses.order_by('price')
     elif sort_by == 'price_desc':
         masterclasses = masterclasses.order_by('-price')
     elif sort_by == 'date_desc':
-        masterclasses = masterclasses.order_by('-start_datetime')
-    else:  # date_asc (по умолчанию)
-        masterclasses = masterclasses.order_by('start_datetime')
+        masterclasses = masterclasses.order_by('-nearest_start')
+    else:
+        masterclasses = masterclasses.order_by('nearest_start')
 
-    # ПАГИНАЦИЯ (10 на страницу)
+    # ПАГИНАЦИЯ
     paginator = Paginator(masterclasses, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Данные для фильтров (списки уникальных значений)
-    # Данные для фильтров (списки уникальных значений)
+    # Для каждого мастер-класса на странице получаем ближайший сеанс
+    for mc in page_obj:
+        mc.nearest_session = mc.sessions.filter(status='active').order_by('start_datetime').first()
+
+    # Данные для фильтров
     cities = MasterClass.objects.filter(status='approved').values_list('city', flat=True).distinct().order_by('city')
     categories = Category.objects.all()
 
@@ -479,18 +492,6 @@ def favorites_list_view(request):
     return render(request, 'main/favorites.html', {'favorites': favorites})
 
 
-@login_required
-def create_masterclass_view(request):
-    """Создание мастер-класса (для организатора)"""
-    if request.user.role != 'organizer' and not request.user.is_admin:
-        return redirect('catalog')
-
-    categories = Category.objects.all()
-    if request.method == 'POST':
-        # Обработка создания мастер-класса
-        pass
-
-    return render(request, 'main/create_masterclass.html', {'categories': categories})
 
 
 from django.contrib.auth.decorators import login_required
@@ -502,7 +503,7 @@ from .models import MasterClass, Booking, Favorite, Category
 
 @login_required
 def create_masterclass_view(request):
-    """Создание мастер-класса (только организатор и админ)"""
+    """Создание мастер-класса с сеансами (только организатор и админ)"""
     if request.user.role != 'organizer' and not request.user.is_admin:
         return redirect('home')
 
@@ -517,11 +518,8 @@ def create_masterclass_view(request):
         address = request.POST.get('address')
         format_type = request.POST.get('format')
         price = request.POST.get('price')
-        max_participants = request.POST.get('max_participants')
-        start_datetime = request.POST.get('start_datetime')
-        end_datetime = request.POST.get('end_datetime')
 
-        # Создаём мастер-класс
+        # Создаём мастер-класс (без дат, они теперь в сеансах)
         masterclass = MasterClass.objects.create(
             title=title,
             description=description,
@@ -531,11 +529,22 @@ def create_masterclass_view(request):
             address=address,
             format=format_type,
             price=price,
-            max_participants=max_participants,
-            start_datetime=datetime.strptime(start_datetime, '%Y-%m-%dT%H:%M'),
-            end_datetime=datetime.strptime(end_datetime, '%Y-%m-%dT%H:%M'),
             status='pending'
         )
+
+        # Создаём сеансы из динамических полей
+        start_datetimes = request.POST.getlist('start_datetime')
+        end_datetimes = request.POST.getlist('end_datetime')
+        max_participants_list = request.POST.getlist('max_participants')
+
+        for i in range(len(start_datetimes)):
+            if start_datetimes[i] and end_datetimes[i]:
+                Session.objects.create(
+                    masterclass=masterclass,
+                    start_datetime=datetime.strptime(start_datetimes[i], '%Y-%m-%dT%H:%M'),
+                    end_datetime=datetime.strptime(end_datetimes[i], '%Y-%m-%dT%H:%M'),
+                    max_participants=int(max_participants_list[i])
+                )
 
         # Обработка загруженных изображений
         images = request.FILES.getlist('images')
@@ -543,7 +552,7 @@ def create_masterclass_view(request):
             Image.objects.create(
                 masterclass=masterclass,
                 image=img,
-                is_main=(i == 0)  # Первое фото становится главным
+                is_main=(i == 0)
             )
 
         messages.success(request, 'Мастер-класс успешно создан!')
@@ -551,14 +560,13 @@ def create_masterclass_view(request):
 
     return render(request, 'main/create_masterclass.html', {'categories': categories})
 
-
 def masterclass_detail_view(request, masterclass_id):
     """Детальная страница мастер-класса с отзывами"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
+    sessions = masterclass.sessions.filter(status='active')
 
     # Переменные по умолчанию для неавторизованных пользователей
     is_favorite = False
-    is_booked = False
     can_edit = False
     can_review = False
     participants_list = []
@@ -569,14 +577,6 @@ def masterclass_detail_view(request, masterclass_id):
     if request.user.is_authenticated:
         # Проверка в избранном
         is_favorite = Favorite.objects.filter(user=request.user, masterclass=masterclass).exists()
-
-        # Проверка бронирования
-        # Стало:
-        is_booked = Booking.objects.filter(
-            participant=request.user,
-            masterclass=masterclass,
-            status__in=['pending', 'confirmed']  # Только активные бронирования
-        ).exists()
 
         # Проверка прав на редактирование/удаление
         can_edit = (request.user == masterclass.organizer) or request.user.is_admin
@@ -604,30 +604,31 @@ def masterclass_detail_view(request, masterclass_id):
     context = {
         'masterclass': masterclass,
         'is_favorite': is_favorite,
-        'is_booked': is_booked,
         'reviews': reviews,
         'reviews_count': reviews_count,
         'avg_rating': avg_rating,
         'can_edit': can_edit,
         'participants_list': participants_list,
         'can_review': can_review,
+        'sessions': sessions,  # Сеансы
     }
 
     return render(request, 'main/masterclass_detail.html', context)
 
+
 @login_required
 def edit_masterclass_view(request, masterclass_id):
-    """Редактирование мастер-класса (только владелец или админ)"""
-    from .models import MasterClass
-    masterclass = MasterClass.objects.get(id=masterclass_id)
+    """Редактирование мастер-класса и его сеансов"""
+    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
-    # Проверка прав
     if request.user != masterclass.organizer and not request.user.is_admin:
-        return redirect('home')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     categories = Category.objects.all()
+    sessions = masterclass.sessions.filter(status='active').order_by('start_datetime')
 
     if request.method == 'POST':
+        # Обновляем основную информацию
         masterclass.title = request.POST.get('title')
         masterclass.description = request.POST.get('description')
         masterclass.category_id = request.POST.get('category')
@@ -635,18 +636,45 @@ def edit_masterclass_view(request, masterclass_id):
         masterclass.address = request.POST.get('address')
         masterclass.format = request.POST.get('format')
         masterclass.price = request.POST.get('price')
-        masterclass.max_participants = request.POST.get('max_participants')
-
-        from datetime import datetime
-        masterclass.start_datetime = datetime.strptime(request.POST.get('start_datetime'), '%Y-%m-%dT%H:%M')
-        masterclass.end_datetime = datetime.strptime(request.POST.get('end_datetime'), '%Y-%m-%dT%H:%M')
         masterclass.save()
+
+        # Обновляем существующие сеансы
+        session_ids = request.POST.getlist('session_id')
+        start_datetimes = request.POST.getlist('start_datetime')
+        end_datetimes = request.POST.getlist('end_datetime')
+        max_participants_list = request.POST.getlist('max_participants')
+
+        for i in range(len(session_ids)):
+            if session_ids[i] and start_datetimes[i] and end_datetimes[i]:
+                session = Session.objects.get(id=session_ids[i], masterclass=masterclass)
+                session.start_datetime = datetime.strptime(start_datetimes[i], '%Y-%m-%dT%H:%M')
+                session.end_datetime = datetime.strptime(end_datetimes[i], '%Y-%m-%dT%H:%M')
+                session.max_participants = int(max_participants_list[i])
+                session.save()
+
+        # Добавляем новые сеансы
+        new_start_datetimes = request.POST.getlist('new_start_datetime')
+        new_end_datetimes = request.POST.getlist('new_end_datetime')
+        new_max_participants_list = request.POST.getlist('new_max_participants')
+
+        for i in range(len(new_start_datetimes)):
+            if new_start_datetimes[i] and new_end_datetimes[i]:
+                Session.objects.create(
+                    masterclass=masterclass,
+                    start_datetime=datetime.strptime(new_start_datetimes[i], '%Y-%m-%dT%H:%M'),
+                    end_datetime=datetime.strptime(new_end_datetimes[i], '%Y-%m-%dT%H:%M'),
+                    max_participants=int(new_max_participants_list[i])
+                )
+
+        messages.success(request, 'Мастер-класс обновлён!')
         return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
-    return render(request, 'main/edit_masterclass.html', {
+    context = {
         'masterclass': masterclass,
-        'categories': categories
-    })
+        'categories': categories,
+        'sessions': sessions,
+    }
+    return render(request, 'main/edit_masterclass.html', context)
 
 
 from django.http import JsonResponse
@@ -714,50 +742,54 @@ def add_booking_view(request, masterclass_id):
     messages.success(request, f'Вы успешно записались на мастер-класс "{masterclass.title}"!')
     return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
+
+@login_required
+def booking_session_view(request, session_id):
+    session = get_object_or_404(Session, id=session_id, status='active')
+    masterclass = session.masterclass
+
+    if request.method == 'POST':
+        if not session.has_free_places:
+            messages.error(request, 'Свободные места закончились')
+            return redirect('masterclass_detail', masterclass_id=masterclass.id)
+
+        Booking.objects.create(
+            participant=request.user,
+            masterclass=masterclass,
+            session=session,
+            status='confirmed',
+            payment_status='paid',
+            participants_count=1,
+            total_price=masterclass.price
+        )
+        session.current_participants += 1
+        session.save()
+
+        messages.success(request, f'Вы записались на "{masterclass.title}"')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+
+    return render(request, 'main/booking_session.html', {'session': session, 'masterclass': masterclass})
+
+
+@login_required
+def booking_detail_view(request, booking_id):
+    """Детальная страница бронирования"""
+    booking = get_object_or_404(Booking, id=booking_id, participant=request.user)
+    session = booking.session
+    masterclass = booking.masterclass
+
+    context = {
+        'booking': booking,
+        'session': session,
+        'masterclass': masterclass,
+    }
+    return render(request, 'main/booking_detail.html', context)
+
 def custom_logout_view(request):
     """Выход из системы"""
     logout(request)
     return redirect('home')
 
-
-def edit_masterclass_view(request, masterclass_id):
-    """Редактирование мастер-класса (только владелец или админ)"""
-    from datetime import datetime
-    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-
-    # Проверка прав
-    if request.user != masterclass.organizer and not request.user.is_admin:
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    categories = Category.objects.all()
-
-    if request.method == 'POST':
-        masterclass.title = request.POST.get('title')
-        masterclass.description = request.POST.get('description')
-        masterclass.category_id = request.POST.get('category')
-        masterclass.city = request.POST.get('city')
-        masterclass.address = request.POST.get('address')
-        masterclass.format = request.POST.get('format')
-        masterclass.price = request.POST.get('price')
-        masterclass.max_participants = request.POST.get('max_participants')
-        masterclass.start_datetime = datetime.strptime(request.POST.get('start_datetime'), '%Y-%m-%dT%H:%M')
-        masterclass.end_datetime = datetime.strptime(request.POST.get('end_datetime'), '%Y-%m-%dT%H:%M')
-        masterclass.save()
-
-        messages.success(request, 'Мастер-класс успешно обновлён!')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    # Форматирование дат для input type="datetime-local"
-    start_datetime_str = masterclass.start_datetime.strftime('%Y-%m-%dT%H:%M')
-    end_datetime_str = masterclass.end_datetime.strftime('%Y-%m-%dT%H:%M')
-
-    context = {
-        'masterclass': masterclass,
-        'categories': categories,
-        'start_datetime_str': start_datetime_str,
-        'end_datetime_str': end_datetime_str,
-    }
-    return render(request, 'main/edit_masterclass.html', context)
 
 
 def delete_masterclass_view(request, masterclass_id):
@@ -851,49 +883,6 @@ def edit_profile_ajax(request):
     return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
 
 
-@login_required
-def booking_page_view(request, masterclass_id):
-    """Страница бронирования мастер-класса"""
-    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-
-    # Проверка: нельзя забронировать свой мастер-класс
-    if request.user == masterclass.organizer:
-        messages.error(request, 'Вы не можете записаться на свой мастер-класс')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    # Проверка: есть ли свободные места
-    if masterclass.current_participants >= masterclass.max_participants:
-        messages.error(request, 'Свободные места закончились')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    # Проверка: не записан ли уже пользователь
-    existing_booking = Booking.objects.filter(
-        participant=request.user,
-        masterclass=masterclass,
-        status__in=['pending', 'confirmed']
-    ).exists()
-
-    if existing_booking:
-        messages.error(request, 'Вы уже записаны на этот мастер-класс')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
-    if request.method == 'POST':
-        # Сохраняем данные в сессию для страницы оплаты
-        request.session['booking_data'] = {
-            'masterclass_id': masterclass.id,
-            'participants_count': int(request.POST.get('participants_count', 1)),
-            'participant_name': request.POST.get('participant_name', ''),
-            'participant_phone': request.POST.get('participant_phone', ''),
-            'participant_email': request.POST.get('participant_email', ''),
-            'comment': request.POST.get('comment', ''),
-        }
-        return redirect('payment_page', masterclass_id=masterclass.id)
-
-    context = {
-        'masterclass': masterclass,
-        'max_participants': masterclass.max_participants - masterclass.current_participants,
-    }
-    return render(request, 'main/booking_page.html', context)
 
 
 @login_required

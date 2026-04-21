@@ -105,13 +105,6 @@ class MasterClass(models.Model):
 
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)],
                                 verbose_name="Цена (руб)")
-    max_participants = models.PositiveIntegerField(validators=[MinValueValidator(1)],
-                                                   verbose_name="Максимум участников")
-    current_participants = models.PositiveIntegerField(default=0, verbose_name="Текущее количество записавшихся")
-
-    start_datetime = models.DateTimeField(verbose_name="Дата и время начала")
-    end_datetime = models.DateTimeField(verbose_name="Дата и время окончания")
-
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Статус")
     moderation_comment = models.TextField(blank=True, verbose_name="Комментарий модератора")
 
@@ -121,29 +114,16 @@ class MasterClass(models.Model):
     class Meta:
         verbose_name = "Мастер-класс"
         verbose_name_plural = "Мастер-классы"
-        ordering = ['-start_datetime']
+        ordering = ['-created_at']
         indexes = [
             models.Index(fields=['city']),
-            models.Index(fields=['start_datetime']),
             models.Index(fields=['category']),
             models.Index(fields=['status']),
         ]
 
     def __str__(self):
-        return f"{self.title} - {self.city} ({self.start_datetime.strftime('%d.%m.%Y')})"
+        return f"{self.title} - {self.city}"
 
-    @property
-    def is_upcoming(self):
-        """Проверка, что мероприятие еще не началось"""
-        return self.start_datetime > timezone.now()
-
-    @property
-    def has_free_places(self):
-        return self.current_participants < self.max_participants
-
-    @property
-    def free_places(self):
-        return self.max_participants - self.current_participants
 
 
 # ============================================================
@@ -166,7 +146,47 @@ class Image(models.Model):
     def __str__(self):
         return f"Фото для {self.masterclass.title}"
 
+# СЕССИИ
+class Session(models.Model):
+    """Сеанс мастер-класса (конкретная дата и время)"""
 
+    masterclass = models.ForeignKey(
+        'MasterClass',
+        on_delete=models.CASCADE,
+        related_name='sessions',
+        verbose_name="Мастер-класс"
+    )
+    start_datetime = models.DateTimeField(verbose_name="Дата и время начала")
+    end_datetime = models.DateTimeField(verbose_name="Дата и время окончания")
+    max_participants = models.PositiveIntegerField(default=10, verbose_name="Максимум участников")
+    current_participants = models.PositiveIntegerField(default=0, verbose_name="Текущее количество записавшихся")
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('active', 'Активен'),
+            ('cancelled', 'Отменён'),
+            ('completed', 'Завершён'),
+        ],
+        default='active',
+        verbose_name="Статус"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Сеанс"
+        verbose_name_plural = "Сеансы"
+        ordering = ['start_datetime']
+
+    def __str__(self):
+        return f"{self.masterclass.title} - {self.start_datetime.strftime('%d.%m.%Y %H:%M')}"
+
+    @property
+    def free_places(self):
+        return self.max_participants - self.current_participants
+
+    @property
+    def has_free_places(self):
+        return self.current_participants < self.max_participants
 # ============================================================
 # 5. БРОНИРОВАНИЕ
 # ============================================================
@@ -189,6 +209,14 @@ class Booking(models.Model):
 
     participant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings',
                                     limit_choices_to={'role': 'participant'}, verbose_name="Участник")
+    session = models.ForeignKey(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='bookings',
+        null=True,
+        blank=True,
+        verbose_name="Сеанс"
+    )
     masterclass = models.ForeignKey(MasterClass, on_delete=models.CASCADE, related_name='bookings',
                                     verbose_name="Мастер-класс")
     booking_date = models.DateTimeField(auto_now_add=True, verbose_name="Дата бронирования")
@@ -299,3 +327,5 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.title} для {self.user.get_full_name()}"
+
+

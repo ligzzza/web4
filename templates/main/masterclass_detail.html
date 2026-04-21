@@ -38,35 +38,49 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 1rem; background: var(--light-gray); border-radius: 16px;">
             <div><strong>💰 Цена:</strong> {{ masterclass.price }} ₽</div>
             <div><strong>📍 Город:</strong> {{ masterclass.city }}</div>
-            <div><strong>📅 Дата:</strong> {{ masterclass.start_datetime|date:"d.m.Y H:i" }}</div>
+            <div><strong>📍 Адрес:</strong> {{ masterclass.address }}</div>
             <div><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</div>
-            <div><strong>👥 Места:</strong> {{ masterclass.free_places }} / {{ masterclass.max_participants }}</div>
             <div><strong>📂 Категория:</strong> {{ masterclass.category.name }}</div>
         </div>
 
-        <!-- Адрес -->
-        <p><strong>📍 Адрес:</strong> {{ masterclass.address }}</p>
 
         <!-- Описание -->
         <div style="margin: 1.5rem 0;">
-            <h3>📖 О мастер-классе</h3>
+            <h3>О мастер-классе:</h3>
             <p style="line-height: 1.6;">{{ masterclass.description }}</p>
+        </div>
+
+        <!-- Сеансы -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3>📅 Доступные сеансы</h3>
+            {% if sessions %}
+                <div class="sessions-list">
+                    {% for session in sessions %}
+                    <div class="session-card">
+                        <div class="session-date">
+                            {{ session.start_datetime|date:"d.m.Y H:i" }} — {{ session.end_datetime|date:"H:i" }}
+                        </div>
+                        <div class="session-info">
+                            👥 {{ session.free_places }}/{{ session.max_participants }} мест
+                        </div>
+                        {% if user.is_authenticated and user.role == 'participant' %}
+                            {% if session.has_free_places %}
+                                <a href="{% url 'booking_session' session.id %}" class="btn-small">Записаться</a>
+                            {% else %}
+                                <button class="btn-small" disabled style="background: #ccc;">❌ Мест нет</button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>Нет доступных сеансов</p>
+            {% endif %}
         </div>
 
         <!-- Кнопки действий -->
         <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
             {% if user.is_authenticated %}
-                {% if user.role == 'participant' %}
-                    {% if is_booked %}
-                        <button class="btn" disabled style="opacity: 0.6; background: #ccc;">✓ Вы уже записаны</button>
-                    {% else %}
-                        {% if masterclass.has_free_places %}
-                            <a href="{% url 'booking_page' masterclass.id %}" class="btn">📝 Записаться ({{ masterclass.price }} ₽)</a>
-                        {% else %}
-                            <button class="btn" disabled style="opacity: 0.6; background: #ccc;">❌ Мест нет</button>
-                        {% endif %}
-                    {% endif %}
-                {% endif %}
 
                 <!-- Кнопка избранное (сердечко) -->
                 <button id="favorite-btn" data-masterclass-id="{{ masterclass.id }}" class="favorite-btn" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center;">
@@ -282,6 +296,35 @@
     }
     .review-item {
         transition: all 0.2s;
+    }
+    .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    }
+
+    .session-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--soft-pink);
+        border-radius: 12px;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .session-date {
+        font-weight: bold;
+        color: var(--accent-pink);
+        min-width: 180px;
+    }
+
+    .session-info {
+        display: flex;
+        gap: 1rem;
+        color: #666;
+        flex: 1;
     }
 </style>
 {% endblock %}

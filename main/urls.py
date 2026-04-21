@@ -35,9 +35,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('participant/dashboard/', views.participant_dashboard, name='participant_dashboard'),
     path('organizer/dashboard/', views.organizer_dashboard, name='organizer_dashboard'),
-    path('booking/<int:masterclass_id>/', views.booking_page_view, name='booking_page'),
     path('payment/<int:masterclass_id>/', views.payment_page_view, name='payment_page'),
     path('booking/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
+    path('session/<int:session_id>/book/', views.booking_session_view, name='booking_session'),
+    path('booking-detail/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
+    path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
 
     # Отзывы - редактирование и удаление
     path('review/<int:review_id>/edit/', views.edit_review_view, name='edit_review'),

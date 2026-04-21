@@ -21,7 +21,6 @@
             </div>
         </form>
 
-        <!-- Результат поиска -->
         {% if search_query %}
             <div style="margin-top: 1rem; padding: 0.5rem; background: var(--soft-pink); border-radius: 30px; text-align: center;">
                 🔎 Результаты поиска по запросу <strong>"{{ search_query }}"</strong>: найдено <strong>{{ page_obj.paginator.count }}</strong> мастер-классов
@@ -32,11 +31,9 @@
     <!-- БЛОК ФИЛЬТРОВ -->
     <div class="filters-card" style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
         <form method="get" id="filter-form">
-            <!-- Сохраняем поисковый запрос при фильтрации -->
             <input type="hidden" name="search" value="{{ search_query }}">
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <!-- Город -->
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>📍 Город</label>
                     <select name="city" style="width: 100%;" onchange="this.form.submit()">
@@ -47,7 +44,6 @@
                     </select>
                 </div>
 
-                <!-- Формат -->
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>🎯 Формат</label>
                     <select name="format" style="width: 100%;" onchange="this.form.submit()">
@@ -57,7 +53,6 @@
                     </select>
                 </div>
 
-                <!-- Категория -->
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>📂 Категория</label>
                     <select name="category" style="width: 100%;" onchange="this.form.submit()">
@@ -68,7 +63,6 @@
                     </select>
                 </div>
 
-                <!-- Сортировка -->
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>🔄 Сортировка</label>
                     <select name="sort" style="width: 100%;" onchange="this.form.submit()">
@@ -86,7 +80,7 @@
         </form>
     </div>
 
-    <!-- СЕТКА МАСТЕР-КЛАССОВ (по 2 в ряд) -->
+    <!-- СЕТКА МАСТЕР-КЛАССОВ -->
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
         {% for mc in page_obj %}
         <div class="card" style="display: flex; flex-direction: column; height: 100%;">
@@ -101,19 +95,23 @@
                 {% endif %}
             {% endwith %}
 
-            <!-- Информация -->
             <h3 style="margin-bottom: 0.5rem;">{{ mc.title }}</h3>
             <p style="color: var(--accent-pink); font-weight: 600; margin-bottom: 0.5rem;">{{ mc.price }} ₽</p>
             <p style="margin-bottom: 0.3rem;">📍 {{ mc.city }} • {{ mc.get_format_display }}</p>
-            <p style="margin-bottom: 0.3rem;">📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}</p>
-            <p style="margin-bottom: 1rem;">👥 {{ mc.current_participants }}/{{ mc.max_participants }} мест</p>
 
-            <!-- Теги категории -->
+            <!-- Данные из ближайшего сеанса -->
+            {% if mc.nearest_session %}
+                <p style="margin-bottom: 0.3rem;">📅 {{ mc.nearest_session.start_datetime|date:"d.m.Y H:i" }}</p>
+                <p style="margin-bottom: 1rem;">👥 {{ mc.nearest_session.free_places }}/{{ mc.nearest_session.max_participants }} мест</p>
+            {% else %}
+                <p style="margin-bottom: 0.3rem; color: #888;">📅 Скоро будут добавлены сеансы</p>
+                <p style="margin-bottom: 1rem; color: #888;">👥 —</p>
+            {% endif %}
+
             <span style="background: var(--soft-pink); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; align-self: flex-start; margin-bottom: 1rem;">
                 {{ mc.category.name }}
             </span>
 
-            <!-- Кнопка -->
             <a href="{% url 'masterclass_detail' mc.id %}" class="btn" style="margin-top: auto; text-align: center;">Подробнее →</a>
         </div>
         {% empty %}

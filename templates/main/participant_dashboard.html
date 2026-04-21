@@ -45,16 +45,13 @@
             <div class="booking-details">
                 📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
             </div>
-            <div class="booking-date">
-                📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
-            </div>
             <div class="booking-status">
                 <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
                 <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
             </div>
         </div>
         <div class="booking-actions">
-            <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
+            <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
             <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn">Отменить</a>
         </div>
     </div>
@@ -71,9 +68,6 @@
                     <strong>{{ booking.masterclass.title }}</strong>
                     <div class="booking-details">
                         📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
-                    </div>
-                    <div class="booking-date">
-                        📅 {{ booking.masterclass.start_datetime|date:"d.m.Y H:i" }}
                     </div>
                     <div class="booking-status">
                         <span class="status confirmed">✅ {{ booking.get_status_display }}</span>

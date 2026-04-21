@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import User, Category, MasterClass, Image, Booking, Review, Favorite, Notification
+from .models import User, Category, MasterClass, Image, Booking, Review, Favorite, Notification, Session
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
+    list_display = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'current_participants', 'status']
+    list_filter = ['status', 'masterclass']
+    search_fields = ['masterclass__title']
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -14,7 +21,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(MasterClass)
 class MasterClassAdmin(admin.ModelAdmin):
-    list_display = ['title', 'organizer', 'city', 'start_datetime', 'status', 'current_participants', 'max_participants']
+    list_display = ['title', 'organizer', 'city', 'format', 'price', 'status', 'created_at']
     list_filter = ['status', 'city', 'format', 'category']
     search_fields = ['title', 'description']
 

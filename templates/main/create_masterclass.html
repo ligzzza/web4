@@ -59,17 +59,71 @@
                 </select>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>Дата и время начала</label>
-                    <input type="datetime-local" name="start_datetime" required>
+            <!-- Блок сеансов -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3>📅 Сеансы (даты и время)</h3>
+                <p class="section-subtitle">Добавьте несколько вариантов дат для одного мастер-класса</p>
+                <div id="sessions-container">
+                    <div class="session-item" data-index="0">
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Дата и время начала</label>
+                                <input type="datetime-local" name="start_datetime" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Дата и время окончания</label>
+                                <input type="datetime-local" name="end_datetime" required>
+                            </div>
+                            <div class="form-group" style="width: 120px;">
+                                <label>Макс. мест</label>
+                                <input type="number" name="max_participants" min="1" value="10" required>
+                            </div>
+                            <button type="button" class="remove-session-btn btn-small" style="background: #e74c3c; color: white; margin-top: 1.5rem;">🗑️</button>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label>Дата и время окончания</label>
-                    <input type="datetime-local" name="end_datetime" required>
-                </div>
+                <button type="button" id="add-session-btn" class="btn-outline" style="margin-top: 0.5rem;">+ Добавить ещё дату</button>
             </div>
+
+            <script>
+                let sessionCount = 1;
+
+                document.getElementById('add-session-btn').addEventListener('click', function() {
+                    sessionCount++;
+                    const container = document.getElementById('sessions-container');
+                    const newSession = document.createElement('div');
+                    newSession.className = 'session-item';
+                    newSession.setAttribute('data-index', sessionCount);
+                    newSession.innerHTML = `
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>Дата и время начала</label>
+                                <input type="datetime-local" name="start_datetime" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label>Дата и время окончания</label>
+                                <input type="datetime-local" name="end_datetime" required>
+                            </div>
+                            <div class="form-group" style="width: 120px;">
+                                <label>Макс. мест</label>
+                                <input type="number" name="max_participants" min="1" value="10" required>
+                            </div>
+                            <button type="button" class="remove-session-btn btn-small" style="background: #e74c3c; color: white; margin-top: 1.5rem;">🗑️</button>
+                        </div>
+                    `;
+                    container.appendChild(newSession);
+
+                    newSession.querySelector('.remove-session-btn').addEventListener('click', function() {
+                        newSession.remove();
+                    });
+                });
+
+                document.querySelectorAll('.remove-session-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        btn.closest('.session-item').remove();
+                    });
+                });
+            </script>
         </div>
 
         <!-- Цена и участники -->

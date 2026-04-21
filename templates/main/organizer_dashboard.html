@@ -45,15 +45,29 @@
                     <div class="booking-details">
                         📍 {{ mc.city }} • {{ mc.get_format_display }}
                     </div>
-                    <div class="booking-date">
-                        📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}
-                    </div>
-                    <div class="booking-status">
-                        <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
-                            {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
-                        </span>
-                        <span class="status paid">👥 {{ mc.current_participants }}/{{ mc.max_participants }}</span>
-                    </div>
+                    {% with mc.sessions.all.0 as first_session %}
+                        {% if first_session %}
+                            <div class="booking-date">
+                                📅 {{ first_session.start_datetime|date:"d.m.Y H:i" }}
+                            </div>
+                            <div class="booking-status">
+                                <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                    {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
+                                </span>
+                                <span class="status paid">👥 {{ first_session.current_participants }}/{{ first_session.max_participants }}</span>
+                            </div>
+                        {% else %}
+                            <div class="booking-date">
+                                📅 Дата не указана
+                            </div>
+                            <div class="booking-status">
+                                <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                    {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
+                                </span>
+                                <span class="status paid">👥 Нет сеансов</span>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
                 </div>
                 <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее</a>
             </div>
@@ -71,15 +85,29 @@
                         <div class="booking-details">
                             📍 {{ mc.city }} • {{ mc.get_format_display }}
                         </div>
-                        <div class="booking-date">
-                            📅 {{ mc.start_datetime|date:"d.m.Y H:i" }}
-                        </div>
-                        <div class="booking-status">
-                            <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
-                                {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
-                            </span>
-                            <span class="status paid">👥 {{ mc.current_participants }}/{{ mc.max_participants }}</span>
-                        </div>
+                        {% with mc.sessions.all.0 as first_session %}
+                            {% if first_session %}
+                                <div class="booking-date">
+                                    📅 {{ first_session.start_datetime|date:"d.m.Y H:i" }}
+                                </div>
+                                <div class="booking-status">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                        {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
+                                    </span>
+                                    <span class="status paid">👥 {{ first_session.current_participants }}/{{ first_session.max_participants }}</span>
+                                </div>
+                            {% else %}
+                                <div class="booking-date">
+                                    📅 Дата не указана
+                                </div>
+                                <div class="booking-status">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                        {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
+                                    </span>
+                                    <span class="status paid">👥 Нет сеансов</span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
                     </div>
                     <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее</a>
                 </div>
@@ -92,12 +120,6 @@
             <a href="{% url 'create_masterclass' %}" class="btn-small" style="margin-top: 1rem;">➕ Создать мастер-класс</a>
         {% endif %}
     </div>
-
-    <!-- Кнопки действий -->
-    <div class="action-buttons">
-        <a href="{% url 'create_masterclass' %}" class="btn-outline">✨ Создать мастер-класс</a>
-    </div>
-</div>
 
 <!-- Модальное окно редактирования профиля -->
 <div id="editModal" class="modal" style="display: none;">

@@ -1,0 +1,62 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Детали бронирования{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">📋 Детали бронирования</h2>
+    </div>
+    
+    <div class="info-card">
+        <h3 style="color: var(--accent-pink);">{{ masterclass.title }}</h3>
+        
+        <div style="margin-top: 1rem;">
+            <p><strong>📅 Дата и время:</strong> {{ session.start_datetime|date:"d.m.Y H:i" }}</p>
+            <p><strong>📍 Место:</strong> {{ masterclass.city }}, {{ masterclass.address }}</p>
+            <p><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</p>
+            <p><strong>👥 Количество мест:</strong> {{ booking.participants_count }}</p>
+            <p><strong>💰 Стоимость:</strong> {{ booking.total_price }} ₽</p>
+            <p><strong>📊 Статус:</strong> 
+                <span class="status {% if booking.status == 'confirmed' %}confirmed{% else %}cancelled{% endif %}">
+                    {{ booking.get_status_display }}
+                </span>
+            </p>
+            <p><strong>💳 Оплата:</strong> 
+                <span class="status paid">{{ booking.get_payment_status_display }}</span>
+            </p>
+        </div>
+        
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <a href="{% url 'participant_dashboard' %}" class="btn">← Вернуться в профиль</a>
+            {% if booking.status == 'confirmed' %}
+                <a href="{% url 'cancel_booking' booking.id %}" class="btn" style="background: #e74c3c;" onclick="return confirm('Отменить запись?')">Отменить запись</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid var(--soft-pink);
+    }
+    .status {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: white;
+    }
+    .status.confirmed {
+        background: #4CAF50;
+    }
+    .status.cancelled {
+        background: #e74c3c;
+    }
+    .status.paid {
+        background: #2196F3;
+    }
+</style>
+{% endblock %}

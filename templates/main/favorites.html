@@ -23,9 +23,6 @@
                     <p style="color: #888; margin: 0;">
                         📍 {{ fav.masterclass.city }} • 💰 {{ fav.masterclass.price }} ₽
                     </p>
-                    <p style="color: #aaa; font-size: 0.85rem; margin-top: 0.3rem;">
-                        📅 {{ fav.masterclass.start_datetime|date:"d.m.Y H:i" }}
-                    </p>
                 </div>
                 <div style="display: flex; gap: 0.8rem; align-items: center;">
                     <a href="{% url 'masterclass_detail' fav.masterclass.id %}" class="btn" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">Подробнее</a>
