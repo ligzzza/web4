@@ -289,6 +289,28 @@ def participant_dashboard(request):
 
 
 @login_required
+def session_participants_view(request, session_id):
+    """Страница организатора со списком участников сеанса"""
+    session = get_object_or_404(Session, id=session_id)
+    masterclass = session.masterclass
+
+    # Проверка прав
+    if request.user != masterclass.organizer and not request.user.is_admin:
+        messages.error(request, 'У вас нет доступа к этой странице')
+        return redirect('home')
+
+    # Получаем все бронирования на этот сеанс
+    bookings = Booking.objects.filter(session=session, status='confirmed')
+
+    context = {
+        'session': session,
+        'masterclass': masterclass,
+        'bookings': bookings,
+        'participants_count': bookings.count(),
+    }
+    return render(request, 'main/session_participants.html', context)
+
+@login_required
 def organizer_dashboard(request):
     """Страница организатора с его мастер-классами"""
     my_masterclasses = MasterClass.objects.filter(organizer=request.user).order_by('-created_at')

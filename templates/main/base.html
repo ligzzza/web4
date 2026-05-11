@@ -1142,6 +1142,39 @@
             outline: none;
             border-color: var(--accent-pink);
         }
+        .btn-edit {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--soft-blue);
+            color: var(--dark-text);
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: 'Jost', sans-serif;
+        }
+
+        .btn-edit:hover {
+            background: #a8d4c0;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: #d48a9e;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-family: 'Jost', sans-serif;
+        }
+
+        .btn-delete:hover {
+            background: #bc6f8c;
+            transform: translateY(-2px);
+        }
     </style>
 
     {% block extra_head %}{% endblock %}

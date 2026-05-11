@@ -38,6 +38,7 @@ urlpatterns = [
     path('payment/<int:masterclass_id>/', views.payment_page_view, name='payment_page'),
     path('booking/<int:booking_id>/cancel/', views.cancel_booking_view, name='cancel_booking'),
     path('session/<int:session_id>/book/', views.booking_session_view, name='booking_session'),
+    path('session/<int:session_id>/participants/', views.session_participants_view, name='session_participants'),
     path('booking-detail/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
     path('booking/<int:booking_id>/', views.booking_detail_view, name='booking_detail'),
 

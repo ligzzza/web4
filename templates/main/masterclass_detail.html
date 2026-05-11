@@ -70,6 +70,10 @@
                                 <button class="btn-small" disabled style="background: #ccc;">❌ Мест нет</button>
                             {% endif %}
                         {% endif %}
+                        <!-- Кнопка для организатора -->
+                        {% if user == masterclass.organizer or user.is_admin %}
+                            <a href="{% url 'session_participants' session.id %}" class="btn-small" style="background: var(--soft-blue); color: var(--dark-text);">Участники</a>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -90,8 +94,8 @@
                 </button>
 
                 {% if can_edit %}
-                    <a href="{% url 'edit_masterclass' masterclass.id %}" class="btn">✏️ Редактировать</a>
-                    <a href="{% url 'delete_masterclass' masterclass.id %}" class="btn" style="background: #e74c3c; color: white;">🗑️ Удалить</a>
+                    <a href="{% url 'edit_masterclass' masterclass.id %}" class="btn-edit">Редактировать</a>
+                    <a href="{% url 'delete_masterclass' masterclass.id %}" class="btn-delete" onclick="return confirm('Удалить мастер-класс?')">Удалить</a>
                 {% endif %}
             {% else %}
                 <a href="{% url 'login' %}" class="btn">Войдите, чтобы записаться</a>
@@ -99,17 +103,6 @@
         </div>
     </div>
 
-    <!-- Блок организатора (список участников) -->
-    {% if participants_list and can_edit %}
-    <div class="card" style="margin-top: 2rem;">
-        <h3>👥 Участники ({{ participants_list|length }})</h3>
-        <ul style="margin-top: 1rem;">
-            {% for participant in participants_list %}
-                <li>{{ participant.first_name }} {{ participant.last_name }} ({{ participant.email }})</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
 
     <!-- Отзывы -->
     <div class="card" style="margin-top: 2rem;">

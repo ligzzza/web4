@@ -1,0 +1,88 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Участники - {{ masterclass.title }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-size: 2rem; color: var(--dark-text);">Участники сеанса</h2>
+        <p style="color: #666;">{{ masterclass.title }}</p>
+        <p style="color: var(--accent-pink);">{{ session.start_datetime|date:"d.m.Y H:i" }}</p>
+    </div>
+
+    <div class="info-card">
+        <h3 style="color: var(--accent-pink);">Список участников</h3>
+
+        {% if bookings %}
+            <div style="margin-top: 1.5rem;">
+                {% for booking in bookings %}
+                <div class="participant-item">
+                    <div class="participant-info">
+                        <strong>{{ booking.participant.first_name }} {{ booking.participant.last_name }}</strong>
+                        <span class="badge-places">{{ booking.participants_count }} мест</span>
+                        <div class="participant-details">
+                            📧 {{ booking.participant.email }}<br>
+                            📞 {{ booking.participant.phone|default:"Телефон не указан" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-message">На этот сеанс пока никто не записался</p>
+        {% endif %}
+
+        <div style="margin-top: 2rem;">
+            <a href="{% url 'masterclass_detail' masterclass.id %}" class="btn">Назад к мастер-классу</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .participant-item {
+        border-bottom: 1px solid #eee;
+        padding: 1rem 0;
+    }
+
+    .participant-item:last-child {
+        border-bottom: none;
+    }
+
+    .participant-info strong {
+        font-size: 1.1rem;
+        color: var(--dark-text);
+    }
+
+    .badge-places {
+        background: var(--soft-pink);
+        color: var(--dark-text);
+        padding: 0.25rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-left: 0.8rem;
+    }
+
+    .participant-details {
+        margin-top: 0.5rem;
+        color: #888;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        color: #888;
+        font-size: 1rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    h3 {
+        font-size: 1.3rem;
+    }
+</style>
+{% endblock %}
