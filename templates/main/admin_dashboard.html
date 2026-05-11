@@ -1,0 +1,139 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Панель администратора</h1>
+    
+    <div class="admin-stats">
+        <div class="stat-card">
+            <h3>{{ pending_masterclasses }}</h3>
+            <p>Мастер-классов<br>на модерации</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ pending_reviews }}</h3>
+            <p>Отзывов<br>на модерации</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ total_users }}</h3>
+            <p>Всего<br>пользователей</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ total_categories }}</h3>
+            <p>Категорий</p>
+        </div>
+    </div>
+
+    <div class="admin-menu">
+        <a href="{% url 'admin_masterclasses' %}" class="admin-card">
+            <div class="admin-card-icon">📋</div>
+            <h3>Модерация мастер-классов</h3>
+            <p>Проверка и публикация</p>
+        </a>
+        <a href="{% url 'admin_reviews' %}" class="admin-card">
+            <div class="admin-card-icon">⭐</div>
+            <h3>Модерация отзывов</h3>
+            <p>Одобрение и удаление</p>
+        </a>
+        <a href="{% url 'admin_users' %}" class="admin-card">
+            <div class="admin-card-icon">👥</div>
+            <h3>Управление пользователями</h3>
+            <p>Блокировка, роли</p>
+        </a>
+        <a href="{% url 'admin_categories' %}" class="admin-card">
+            <div class="admin-card-icon">📂</div>
+            <h3>Управление категориями</h3>
+            <p>Добавление, удаление</p>
+        </a>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-container h1 {
+        text-align: center;
+        font-size: 2rem;
+        color: var(--dark-text);
+        margin-bottom: 2rem;
+    }
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        text-align: center;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .stat-card h3 {
+        font-size: 2rem;
+        color: var(--accent-pink);
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-card p {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .admin-menu {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .admin-card {
+        background: white;
+        border: 1px solid var(--soft-pink);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .admin-card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .admin-card h3 {
+        font-size: 1.1rem;
+        color: var(--dark-text);
+        margin-bottom: 0.3rem;
+    }
+
+    .admin-card p {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    @media (max-width: 768px) {
+        .admin-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .admin-menu {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

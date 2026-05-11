@@ -1,0 +1,242 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Модерация отзывов{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Модерация отзывов</h1>
+    
+    <div class="filters">
+        <a href="?status=all" class="filter-btn {% if current_status == 'all' %}active{% endif %}">Все</a>
+        <a href="?status=pending" class="filter-btn {% if current_status == 'pending' %}active{% endif %}">⏳ На модерации</a>
+        <a href="?status=approved" class="filter-btn {% if current_status == 'approved' %}active{% endif %}">✅ Одобренные</a>
+        <a href="?status=rejected" class="filter-btn {% if current_status == 'rejected' %}active{% endif %}">❌ Отклонённые</a>
+    </div>
+
+    <div class="reviews-list">
+        {% for review in reviews %}
+        <div class="review-card">
+            <div class="review-header">
+                <div class="review-author">
+                    <strong>{{ review.author.first_name }} {{ review.author.last_name }}</strong>
+                    <span class="review-rating">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="review-date">{{ review.created_at|date:"d.m.Y H:i" }}</span>
+                </div>
+                <div class="review-status">
+                    <span class="badge status-{{ review.status }}">
+                        {% if review.status == 'pending' %}⏳ На модерации
+                        {% elif review.status == 'approved' %}✅ Одобрен
+                        {% else %}❌ Отклонён{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="review-masterclass">
+                <span class="masterclass-title">📘 {{ review.masterclass.title }}</span>
+                <span class="masterclass-author">👤 {{ review.masterclass.organizer.first_name }} {{ review.masterclass.organizer.last_name }}</span>
+            </div>
+
+            <div class="review-text">
+                <p>{{ review.text }}</p>
+            </div>
+
+            <div class="review-actions">
+                {% if review.status != 'approved' %}
+                    <a href="{% url 'admin_approve_review' review.id %}" class="btn-approve">✅ Одобрить</a>
+                {% endif %}
+                <a href="{% url 'admin_delete_review' review.id %}" class="btn-delete" onclick="return confirm('Удалить отзыв?')">🗑️ Удалить</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Нет отзывов</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-container h1 {
+        text-align: center;
+        font-size: 2rem;
+        color: var(--dark-text);
+        margin-bottom: 2rem;
+    }
+
+    .filters {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1.2rem;
+        background: white;
+        border: 1px solid var(--soft-pink);
+        border-radius: 30px;
+        text-decoration: none;
+        color: var(--dark-text);
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--accent-pink);
+        color: white;
+        border-color: var(--accent-pink);
+    }
+
+    .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .review-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        border: 1px solid var(--soft-pink);
+        transition: all 0.3s;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .review-author {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .review-author strong {
+        font-size: 1rem;
+        color: var(--dark-text);
+    }
+
+    .review-rating {
+        color: #f5a623;
+        font-size: 0.9rem;
+    }
+
+    .review-date {
+        font-size: 0.7rem;
+        color: #aaa;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .status-pending { background: #ffe0b2; color: #e65100; }
+    .status-approved { background: #c8e6c9; color: #2e7d32; }
+    .status-rejected { background: #ffcdd2; color: #c62828; }
+
+    .review-masterclass {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .masterclass-title {
+        color: var(--accent-pink);
+        font-weight: 500;
+    }
+
+    .masterclass-author {
+        color: #888;
+    }
+
+    .review-text {
+        background: #f9f9f9;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-text p {
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: flex-end;
+    }
+
+    .btn-approve, .btn-delete {
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+    }
+
+    .btn-approve {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .btn-approve:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .btn-delete {
+        background: #d48a9e;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #bc6f8c;
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #888;
+    }
+</style>
+{% endblock %}

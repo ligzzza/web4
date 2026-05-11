@@ -1,0 +1,182 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Модерация мастер-классов{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Модерация мастер-классов</h1>
+    
+    <div class="filters">
+        <a href="?status=all" class="filter-btn {% if current_status == 'all' %}active{% endif %}">Все</a>
+        <a href="?status=pending" class="filter-btn {% if current_status == 'pending' %}active{% endif %}">⏳ На модерации</a>
+        <a href="?status=approved" class="filter-btn {% if current_status == 'approved' %}active{% endif %}">✅ Одобренные</a>
+        <a href="?status=rejected" class="filter-btn {% if current_status == 'rejected' %}active{% endif %}">❌ Отклонённые</a>
+    </div>
+
+    <div class="items-list">
+        {% for mc in masterclasses %}
+        <div class="admin-card-item">
+            <div class="item-info">
+                <h3>{{ mc.title }}</h3>
+                <div class="item-meta">
+                    <span>👤 {{ mc.organizer.first_name }} {{ mc.organizer.last_name }}</span>
+                    <span>📍 {{ mc.city }}</span>
+                    <span>💰 {{ mc.price }} ₽</span>
+                </div>
+                <p class="item-description">{{ mc.description|truncatechars:100 }}</p>
+                <span class="badge status-{{ mc.status }}">
+                    {% if mc.status == 'pending' %}⏳ На модерации
+                    {% elif mc.status == 'approved' %}✅ Одобрен
+                    {% else %}❌ Отклонён{% endif %}
+                </span>
+            </div>
+            <div class="item-actions">
+                {% if mc.status != 'approved' %}
+                    <a href="{% url 'admin_approve_masterclass' mc.id %}" class="btn-approve">✅ Одобрить</a>
+                {% endif %}
+                {% if mc.status != 'rejected' %}
+                    <a href="{% url 'admin_reject_masterclass' mc.id %}" class="btn-reject">❌ Отклонить</a>
+                {% endif %}
+                <a href="{% url 'masterclass_detail' mc.id %}" class="btn-view">👁️ Просмотр</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-message">Нет мастер-классов</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-container h1 {
+        text-align: center;
+        font-size: 2rem;
+        color: var(--dark-text);
+        margin-bottom: 2rem;
+    }
+
+    .filters {
+        display: flex;
+        gap: 0.8rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1.2rem;
+        background: white;
+        border: 1px solid var(--soft-pink);
+        border-radius: 30px;
+        text-decoration: none;
+        color: var(--dark-text);
+        font-size: 0.85rem;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: var(--accent-pink);
+        color: white;
+        border-color: var(--accent-pink);
+    }
+
+    .admin-card-item {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--soft-pink);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .item-info {
+        flex: 1;
+    }
+
+    .item-info h3 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-description {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .status-pending { background: #ffe0b2; color: #e65100; }
+    .status-approved { background: #c8e6c9; color: #2e7d32; }
+    .status-rejected { background: #ffcdd2; color: #c62828; }
+
+    .item-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-approve, .btn-reject, .btn-view {
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+
+    .btn-approve {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .btn-approve:hover {
+        background: #a8d4c0;
+    }
+
+    .btn-reject {
+        background: #d48a9e;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: #bc6f8c;
+    }
+
+    .btn-view {
+        background: var(--soft-pink);
+        color: var(--dark-text);
+    }
+
+    .btn-view:hover {
+        background: #f0c4d0;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 3rem;
+        color: #888;
+    }
+</style>
+{% endblock %}

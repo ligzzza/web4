@@ -45,4 +45,24 @@ urlpatterns = [
     # Отзывы - редактирование и удаление
     path('review/<int:review_id>/edit/', views.edit_review_view, name='edit_review'),
     path('review/<int:review_id>/delete/', views.delete_review_view, name='delete_review'),
+
+    # Администратор
+    path('control/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('control/masterclasses/', views.admin_masterclasses, name='admin_masterclasses'),
+    path('control/masterclass/<int:masterclass_id>/approve/', views.admin_approve_masterclass,
+         name='admin_approve_masterclass'),
+    path('control/masterclass/<int:masterclass_id>/reject/', views.admin_reject_masterclass,
+         name='admin_reject_masterclass'),
+    path('control/reviews/', views.admin_reviews, name='admin_reviews'),
+    path('control/review/<int:review_id>/approve/', views.admin_approve_review, name='admin_approve_review'),
+    path('control/review/<int:review_id>/delete/', views.admin_delete_review, name='admin_delete_review'),
+    path('control/users/', views.admin_users, name='admin_users'),
+    path('control/user/<int:user_id>/block/', views.admin_block_user, name='admin_block_user'),
+    path('control/user/<int:user_id>/unblock/', views.admin_unblock_user, name='admin_unblock_user'),
+    path('control/user/<int:user_id>/make-organizer/', views.admin_make_organizer, name='admin_make_organizer'),
+    path('control/categories/', views.admin_categories, name='admin_categories'),
+    path('control/category/<int:category_id>/edit/', views.admin_edit_category, name='admin_edit_category'),
+    path('control/category/<int:category_id>/delete/', views.admin_delete_category, name='admin_delete_category'),
+
+    path('control/profile/', views.admin_profile_view, name='admin_profile'),
 ]

@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Редактирование категории{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px;">
+    <h2>✏️ Редактирование категории</h2>
+    
+    <form method="post" class="info-card">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Название</label>
+            <input type="text" name="name" value="{{ category.name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Slug (URL-имя)</label>
+            <input type="text" name="slug" value="{{ category.slug }}" required>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn">💾 Сохранить</button>
+            <a href="{% url 'admin_categories' %}" class="btn-outline">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

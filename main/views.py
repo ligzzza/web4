@@ -30,6 +30,259 @@ User = get_user_model()
 
 
 # ============================================================
+# ПАНЕЛЬ АДМИНИСТРАТОРА
+# ============================================================
+
+def is_admin(user):
+    return user.is_authenticated and (user.role == 'admin' or user.is_superuser)
+
+
+@login_required
+def admin_dashboard(request):
+    """Главная панель администратора"""
+    if not is_admin(request.user):
+        messages.error(request, 'У вас нет доступа к этой странице')
+        return redirect('home')
+
+    context = {
+        'pending_masterclasses': MasterClass.objects.filter(status='pending').count(),
+        'pending_reviews': Review.objects.filter(status='pending').count(),
+        'total_users': User.objects.count(),
+        'total_categories': Category.objects.count(),
+    }
+    return render(request, 'main/admin_dashboard.html', context)
+
+
+@login_required
+def admin_masterclasses(request):
+    """Список мастер-классов для модерации"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    status_filter = request.GET.get('status', 'all')
+
+    if status_filter == 'all':
+        masterclasses = MasterClass.objects.all().order_by('-created_at')
+    else:
+        masterclasses = MasterClass.objects.filter(status=status_filter).order_by('-created_at')
+
+    return render(request, 'main/admin_masterclasses.html', {
+        'masterclasses': masterclasses,
+        'current_status': status_filter,
+    })
+
+
+@login_required
+def admin_approve_masterclass(request, masterclass_id):
+    """Одобрение мастер-класса"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
+    masterclass.status = 'approved'
+    masterclass.save()
+
+    messages.success(request, f'Мастер-класс "{masterclass.title}" одобрен')
+    return redirect('admin_masterclasses')
+
+
+@login_required
+def admin_reject_masterclass(request, masterclass_id):
+    """Отклонение мастер-класса"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
+    masterclass.status = 'rejected'
+    masterclass.save()
+
+    messages.success(request, f'Мастер-класс "{masterclass.title}" отклонён')
+    return redirect('admin_masterclasses')
+
+
+@login_required
+def admin_reviews(request):
+    """Список отзывов для модерации"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    status_filter = request.GET.get('status', 'all')
+
+    if status_filter == 'all':
+        reviews = Review.objects.all().order_by('-created_at')
+    else:
+        reviews = Review.objects.filter(status=status_filter).order_by('-created_at')
+
+    return render(request, 'main/admin_reviews.html', {
+        'reviews': reviews,
+        'current_status': status_filter,
+    })
+
+
+@login_required
+def admin_approve_review(request, review_id):
+    """Одобрение отзыва"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    review = get_object_or_404(Review, id=review_id)
+    review.status = 'approved'
+    review.save()
+
+    messages.success(request, 'Отзыв одобрен')
+    return redirect('admin_reviews')
+
+
+@login_required
+def admin_delete_review(request, review_id):
+    """Удаление отзыва (для администратора)"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    review = get_object_or_404(Review, id=review_id)
+    review.delete()
+
+    messages.success(request, 'Отзыв удалён')
+    return redirect('admin_reviews')
+
+
+@login_required
+def admin_users(request):
+    """Список пользователей для управления с поиском и фильтрацией"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    users = User.objects.all().order_by('-date_joined')
+
+    # Поиск по имени, фамилии, email
+    search_query = request.GET.get('search', '')
+    if search_query:
+        users = users.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(username__icontains=search_query)
+        )
+
+    # Фильтр по роли
+    role_filter = request.GET.get('role', 'all')
+    if role_filter != 'all':
+        users = users.filter(role=role_filter)
+
+    return render(request, 'main/admin_users.html', {
+        'users': users,
+        'search_query': search_query,
+        'role_filter': role_filter,
+    })
+
+
+@login_required
+def admin_block_user(request, user_id):
+    """Блокировка пользователя"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    user = get_object_or_404(User, id=user_id)
+
+    if user == request.user:
+        messages.error(request, 'Вы не можете заблокировать самого себя')
+        return redirect('admin_users')
+
+    user.is_blocked = True
+    user.is_active = False
+    user.save()
+
+    messages.success(request, f'Пользователь {user.username} заблокирован')
+    return redirect('admin_users')
+
+
+@login_required
+def admin_unblock_user(request, user_id):
+    """Разблокировка пользователя"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    user = get_object_or_404(User, id=user_id)
+    user.is_blocked = False
+    user.is_active = True
+    user.save()
+
+    messages.success(request, f'Пользователь {user.username} разблокирован')
+    return redirect('admin_users')
+
+
+@login_required
+def admin_make_organizer(request, user_id):
+    """Назначение пользователя организатором"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    user = get_object_or_404(User, id=user_id)
+    user.role = 'organizer'
+    user.save()
+
+    messages.success(request, f'Пользователь {user.username} теперь организатор')
+    return redirect('admin_users')
+
+
+@login_required
+def admin_categories(request):
+    """Управление категориями"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        slug = request.POST.get('slug')
+        if name and slug:
+            Category.objects.create(name=name, slug=slug)
+            messages.success(request, f'Категория "{name}" создана')
+        return redirect('admin_categories')
+
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'main/admin_categories.html', {'categories': categories})
+
+
+@login_required
+def admin_edit_category(request, category_id):
+    """Редактирование категории"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    category = get_object_or_404(Category, id=category_id)
+
+    if request.method == 'POST':
+        category.name = request.POST.get('name')
+        category.slug = request.POST.get('slug')
+        category.save()
+        messages.success(request, 'Категория обновлена')
+        return redirect('admin_categories')
+
+    return render(request, 'main/admin_edit_category.html', {'category': category})
+
+
+@login_required
+def admin_delete_category(request, category_id):
+    """Удаление категории"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    category = get_object_or_404(Category, id=category_id)
+    category.delete()
+    messages.success(request, 'Категория удалена')
+    return redirect('admin_categories')
+
+
+@login_required
+def admin_profile_view(request):
+    """Профиль администратора"""
+    if not is_admin(request.user):
+        return redirect('home')
+
+    return render(request, 'main/admin_profile.html', {'user': request.user})
+
+
+# ============================================================
 # VIEWSETS ДЛЯ МАСТЕР-КЛАССОВ
 # ============================================================
 
@@ -234,32 +487,33 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        # Если уже залогинен, перенаправляем на профиль
+        # Если уже залогинен, перенаправляем по роли
         if request.user.role == 'organizer':
             return redirect('organizer_dashboard')
+        elif request.user.role == 'admin' or request.user.is_superuser:
+            return redirect('admin_profile')
         else:
             return redirect('participant_dashboard')
 
     error = None
     if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user:
-                login(request, user)
-                # Перенаправление в зависимости от роли
-                if user.role == 'organizer':
-                    return redirect('organizer_dashboard')
-                else:
-                    return redirect('participant_dashboard')
-            else:
-                error = 'Неверное имя пользователя или пароль'
-    else:
-        form = LoginForm()
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
 
-    return render(request, 'main/login.html', {'form': form, 'error': error})
+        if user:
+            login(request, user)
+            # Перенаправление по роли
+            if user.role == 'organizer':
+                return redirect('organizer_dashboard')
+            elif user.role == 'admin' or user.is_superuser:
+                return redirect('admin_profile')
+            else:
+                return redirect('participant_dashboard')
+        else:
+            error = 'Неверное имя пользователя или пароль'
+
+    return render(request, 'main/login.html', {'error': error})
 
 
 def logout_view(request):
@@ -324,59 +578,6 @@ def organizer_dashboard(request):
         'my_masterclasses': my_masterclasses,
     }
     return render(request, 'main/organizer_dashboard.html', context)
-
-
-# WEB VIEWS (НОВЫЙ КОД - ДОБАВИТЬ В КОНЕЦ ФАЙЛА)
-# ============================================================
-
-def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('/')
-
-    if request.method == 'POST':
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            if user.role == 'organizer':
-                return redirect('/organizer/dashboard/')
-            else:
-                return redirect('/participant/dashboard/')
-    else:
-        form = RegisterForm()
-
-    return render(request, 'main/register.html', {'form': form})
-
-
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('/')
-
-    error = None
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user:
-                login(request, user)
-                if user.role == 'organizer':
-                    return redirect('/organizer/dashboard/')
-                else:
-                    return redirect('/participant/dashboard/')
-            else:
-                error = 'Неверное имя пользователя или пароль'
-    else:
-        form = LoginForm()
-
-    return render(request, 'main/login.html', {'form': form, 'error': error})
-
-
-def logout_view(request):
-    logout(request)
-    return redirect('/login/')
-
 
 # ============================================================
 # НОВЫЕ VIEW-ФУНКЦИИ ДЛЯ НОВОГО ДИЗАЙНА (ДОБАВИТЬ СЮДА)

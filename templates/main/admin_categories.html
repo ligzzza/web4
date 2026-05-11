@@ -1,0 +1,203 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Управление категориями{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Управление категориями</h1>
+    
+    <div class="add-category">
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Название категории" required>
+            <input type="text" name="slug" placeholder="slug (url-имя)" required>
+            <button type="submit" class="btn-add">Добавить</button>
+        </form>
+    </div>
+
+    <div class="categories-list">
+        {% for cat in categories %}
+        <div class="category-card">
+            <div class="category-info">
+                <span class="category-name">{{ cat.name }}</span>
+                <span class="category-slug">{{ cat.slug }}</span>
+            </div>
+            <div class="category-actions">
+                <a href="{% url 'admin_edit_category' cat.id %}" class="btn-edit" title="Редактировать">
+                    ✏️
+                </a>
+                <a href="{% url 'admin_delete_category' cat.id %}" class="btn-delete" title="Удалить" onclick="return confirm('Удалить категорию «{{ cat.name }}»?')">
+                    🗑️
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <p>Категории пока не добавлены</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-container h1 {
+        text-align: center;
+        font-size: 2rem;
+        color: var(--dark-text);
+        margin-bottom: 2rem;
+    }
+
+    .add-category {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .add-category form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .add-category input {
+        flex: 1;
+        padding: 0.8rem 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 30px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+    .add-category input:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
+    }
+
+    .btn-add {
+        background: var(--accent-pink);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 30px;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-add:hover {
+        background: #d48a9e;
+        transform: translateY(-2px);
+    }
+
+    .categories-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        border: 1px solid var(--soft-pink);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        transition: all 0.3s;
+    }
+
+    .category-card:hover {
+        transform: translateX(4px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .category-info {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .category-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--dark-text);
+    }
+
+    .category-slug {
+        color: #aaa;
+        font-size: 0.8rem;
+        background: var(--light-gray);
+        padding: 0.2rem 0.6rem;
+        border-radius: 30px;
+    }
+
+    .category-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .btn-edit, .btn-delete {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        text-decoration: none;
+        transition: all 0.3s;
+        font-size: 1rem;
+    }
+
+    .btn-edit {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .btn-edit:hover {
+        background: #a8d4c0;
+        transform: scale(1.05);
+    }
+
+    .btn-delete {
+        background: #d48a9e;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #bc6f8c;
+        transform: scale(1.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #888;
+    }
+</style>
+{% endblock %}

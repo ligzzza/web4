@@ -28,6 +28,7 @@ class User(AbstractUser):
     # Дополнительные поля для организатора
     organization_name = models.CharField(max_length=200, blank=True, verbose_name="Название студии/организации")
     organization_description = models.TextField(blank=True, verbose_name="Описание студии")
+    is_blocked = models.BooleanField(default=False, verbose_name="Заблокирован")
 
     class Meta:
         verbose_name = "Пользователь"
