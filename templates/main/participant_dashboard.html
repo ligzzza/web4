@@ -12,8 +12,8 @@
     <!-- Личная информация -->
     <div class="info-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="color: var(--accent-pink); margin: 0;">👤 Личная информация</h3>
-            <button id="editProfileBtn" class="btn-small">✏️ Редактировать</button>
+            <h3 style="color: var(--accent-pink); margin: 0;">Личная информация</h3>
+            <button id="editProfileBtn" class="btn-small">Редактировать</button>
         </div>
 
         <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
@@ -33,62 +33,62 @@
         </div>
     </div>
 
-    <!-- Мои записи -->
+     <!-- Мои записи (первые 3, остальные по кнопке) -->
     <div class="bookings-card">
-        <h3>📅 Мои записи</h3>
+        <h3>Мои записи</h3>
 
- {% if bookings %}
-    {% for booking in bookings|slice:":3" %}
-    <div class="booking-item">
-        <div class="booking-info">
-            <strong>{{ booking.masterclass.title }}</strong>
-            <div class="booking-details">
-                📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
-            </div>
-            <div class="booking-status">
-                <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
-                <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
-            </div>
-        </div>
-        <div class="booking-actions">
-            <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
-            <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn">Отменить</a>
-        </div>
-    </div>
-    {% endfor %}
-
-    {% if bookings|length > 3 %}
-        <div class="show-more-container">
-            <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">📋 Показать все записи ({{ bookings|length }})</button>
-        </div>
-        <div id="hiddenBookings" style="display: none;">
-            {% for booking in bookings|slice:"3:" %}
+        {% if bookings %}
+            <!-- Первые 3 бронирования -->
+            {% for booking in bookings|slice:":3" %}
             <div class="booking-item">
                 <div class="booking-info">
                     <strong>{{ booking.masterclass.title }}</strong>
                     <div class="booking-details">
                         📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
                     </div>
-                    <div class="booking-status">
-                        <span class="status confirmed">✅ {{ booking.get_status_display }}</span>
-                        <span class="status paid">💰 {{ booking.get_payment_status_display }}</span>
+                    <div class="booking-date">
+                        📅 {{ booking.session.start_datetime|date:"d.m.Y H:i" }}
                     </div>
                 </div>
                 <div class="booking-actions">
-                    <a href="{% url 'masterclass_detail' booking.masterclass.id %}" class="btn-small">Подробнее</a>
-                    <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn">Отменить</a>
+                    <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
+                    <a href="{% url 'cancel_booking' booking.id %}" class="btn-small" style="background: #d48a9e; color: white;" onclick="return confirm('Отменить запись?')">Отменить</a>
                 </div>
             </div>
             {% endfor %}
-            <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">▲ Скрыть</button>
-        </div>
-        {% endif %}
-    {% else %}
-        <p class="empty-message">У вас пока нет активных записей</p>
-    {% endif %}
-    </div>
-</div>
 
+            <!-- Кнопка "Показать все", если бронирований больше 3 -->
+            {% if bookings|length > 3 %}
+            <div class="show-more-container">
+                <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">Показать все записи ({{ bookings|length }})</button>
+            </div>
+
+            <!-- Скрытые бронирования (остальные) -->
+            <div id="hiddenBookings" style="display: none;">
+                {% for booking in bookings|slice:"3:" %}
+                <div class="booking-item">
+                    <div class="booking-info">
+                        <strong>{{ booking.masterclass.title }}</strong>
+                        <div class="booking-details">
+                            📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
+                        </div>
+                        <div class="booking-date">
+                            📅 {{ booking.session.start_datetime|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
+                        <a href="{% url 'cancel_booking' booking.id %}" class="btn-small" style="background: #d48a9e; color: white;" onclick="return confirm('Отменить запись?')">Отменить</a>
+                    </div>
+                </div>
+                {% endfor %}
+                <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">Скрыть</button>
+            </div>
+            {% endif %}
+        {% else %}
+            <p class="empty-message">У вас пока нет активных записей</p>
+        {% endif %}
+    </div>
 <!-- Модальное окно редактирования профиля -->
 <div id="editModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -558,6 +558,37 @@
 
     .cancel-btn:hover {
         background: #c0392b !important;
+    }
+    /* Кнопки "Показать все" и "Скрыть" */
+    .show-more-container {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .show-more-container .btn-outline,
+    #showMoreBtn,
+    #hideBtn {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        border: none;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .show-more-container .btn-outline:hover,
+    #showMoreBtn:hover,
+    #hideBtn:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    #hideBtn {
+        margin-top: 1rem;
     }
 </style>
 {% endblock %}

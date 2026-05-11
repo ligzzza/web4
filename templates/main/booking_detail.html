@@ -3,60 +3,229 @@
 {% block title %}Детали бронирования{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 800px;">
+<div class="container" style="max-width: 700px;">
     <div style="text-align: center; margin-bottom: 2rem;">
         <h2 style="font-size: 2rem; color: var(--dark-text);">📋 Детали бронирования</h2>
     </div>
-    
-    <div class="info-card">
-        <h3 style="color: var(--accent-pink);">{{ masterclass.title }}</h3>
-        
-        <div style="margin-top: 1rem;">
-            <p><strong>📅 Дата и время:</strong> {{ session.start_datetime|date:"d.m.Y H:i" }}</p>
-            <p><strong>📍 Место:</strong> {{ masterclass.city }}, {{ masterclass.address }}</p>
-            <p><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</p>
-            <p><strong>👥 Количество мест:</strong> {{ booking.participants_count }}</p>
-            <p><strong>💰 Стоимость:</strong> {{ booking.total_price }} ₽</p>
-            <p><strong>📊 Статус:</strong> 
-                <span class="status {% if booking.status == 'confirmed' %}confirmed{% else %}cancelled{% endif %}">
+
+    <div class="booking-detail-card">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1.5rem; font-size: 1.5rem;">{{ masterclass.title }}</h3>
+
+        <div class="detail-info">
+            <div class="detail-row">
+                <span class="detail-label">Дата и время:</span>
+                <span class="detail-value">{{ session.start_datetime|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Место проведения:</span>
+                <span class="detail-value">{{ masterclass.city }}, {{ masterclass.address }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Формат:</span>
+                <span class="detail-value">{{ masterclass.get_format_display }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Количество мест:</span>
+                <span class="detail-value">{{ booking.participants_count }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Стоимость:</span>
+                <span class="detail-value">{{ booking.total_price }} ₽</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Статус:</span>
+                <span class="status-badge {% if booking.status == 'confirmed' %}status-confirmed{% else %}status-cancelled{% endif %}">
                     {{ booking.get_status_display }}
                 </span>
-            </p>
-            <p><strong>💳 Оплата:</strong> 
-                <span class="status paid">{{ booking.get_payment_status_display }}</span>
-            </p>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Оплата:</span>
+                <span class="status-badge status-paid">{{ booking.get_payment_status_display }}</span>
+            </div>
         </div>
-        
-        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-            <a href="{% url 'participant_dashboard' %}" class="btn">← Вернуться в профиль</a>
+
+        <!-- Ссылка на онлайн-трансляцию (если есть) -->
+        {% if session.meeting_link and masterclass.format == 'online' %}
+        <div class="meeting-link-section">
+            <h4>🔗 Подключение к трансляции</h4>
+            <p>Перейдите по ссылке в указанное время:</p>
+            <a href="{{ session.meeting_link }}" target="_blank" class="btn-meeting">Перейти к трансляции</a>
+            <p class="meeting-note">Ссылка активна только для записавшихся участников</p>
+        </div>
+        {% endif %}
+
+        <div class="action-buttons" style="margin-top: 2rem;">
+            <a href="{% url 'participant_dashboard' %}" class="btn-back">Вернуться в профиль</a>
             {% if booking.status == 'confirmed' %}
-                <a href="{% url 'cancel_booking' booking.id %}" class="btn" style="background: #e74c3c;" onclick="return confirm('Отменить запись?')">Отменить запись</a>
+                <a href="{% url 'cancel_booking' booking.id %}" class="btn-cancel" onclick="return confirm('Отменить запись?')">Отменить запись</a>
             {% endif %}
         </div>
     </div>
 </div>
 
 <style>
-    .info-card {
+    .booking-detail-card {
         background: white;
-        border-radius: 20px;
-        padding: 1.5rem;
+        border-radius: 24px;
+        padding: 2rem;
         border: 1px solid var(--soft-pink);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.03);
     }
-    .status {
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
+
+    .detail-info {
+        margin: 1.5rem 0;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: var(--dark-text);
+        width: 40%;
+    }
+
+    .detail-value {
+        color: #666;
+        width: 60%;
+        text-align: right;
+    }
+
+    .status-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 30px;
         font-size: 0.8rem;
+        font-weight: 500;
+        color: white;
+        display: inline-block;
+    }
+
+    .status-confirmed {
+        background: var(--accent-pink);
+        color: var(--dark-text);
+    }
+
+    .status-cancelled {
+        background: #d48a9e;
         color: white;
     }
-    .status.confirmed {
+
+    .status-paid {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .status-pending {
+        background: #ffe0b2;
+        color: #e65100;
+    }
+
+    .meeting-link-section {
+        background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+
+    .meeting-link-section h4 {
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-meeting {
+        display: inline-block;
         background: #4CAF50;
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 0.8rem;
+        transition: all 0.3s;
     }
-    .status.cancelled {
-        background: #e74c3c;
+
+    .btn-meeting:hover {
+        background: #388e3c;
+        transform: translateY(-2px);
     }
-    .status.paid {
-        background: #2196F3;
+
+    .meeting-note {
+        font-size: 0.7rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+        display: inline-block;
+        padding: 0.8rem 1.5rem;
+        background: #d48a9e;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-family: 'Jost', sans-serif;
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 0.8rem 1.5rem;
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-family: 'Jost', sans-serif;
+    }
+
+    .btn-back:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .btn-cancel:hover {
+        background: #bc6f8c;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 600px) {
+        .detail-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+        }
+
+        .detail-label {
+            width: 100%;
+        }
+
+        .detail-value {
+            width: 100%;
+            text-align: left;
+        }
+
+        .booking-detail-card {
+            padding: 1.5rem;
+        }
     }
 </style>
 {% endblock %}

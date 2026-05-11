@@ -69,6 +69,11 @@
                         </div>
                         <button type="button" class="remove-session-btn" onclick="removeSession(this)">🗑️</button>
                     </div>
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label>Ссылка на онлайн-трансляцию (для онлайн-формата)</label>
+                        <input type="url" name="meeting_link" placeholder="https://zoom.us/...">
+                        <small>* Заполняется только для онлайн-мастер-классов. Ссылка появится у записавшихся участников.</small>
+                    </div>
                 </div>
                 {% empty %}
                 <p class="empty-sessions">Нет сеансов. Добавьте первый сеанс ниже.</p>

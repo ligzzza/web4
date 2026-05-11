@@ -14,7 +14,7 @@
 
         <!-- Основная информация -->
         <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
-            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📝 Основное</h3>
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">Основное</h3>
 
             <div class="form-group">
                 <label>Название мастер-класса</label>
@@ -39,7 +39,7 @@
 
         <!-- Место проведения -->
         <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
-            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📍 Где и когда</h3>
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">Где и когда</h3>
 
             <div class="form-group">
                 <label>Город</label>
@@ -54,14 +54,14 @@
             <div class="form-group">
                 <label>Формат</label>
                 <select name="format">
-                    <option value="offline">🏢 Офлайн (в студии)</option>
-                    <option value="online">💻 Онлайн (Zoom, Skype)</option>
+                    <option value="offline">Офлайн (в студии)</option>
+                    <option value="online">Онлайн (Zoom,..)</option>
                 </select>
             </div>
 
             <!-- Блок сеансов -->
             <div class="card" style="margin-bottom: 1.5rem;">
-                <h3>📅 Сеансы (даты и время)</h3>
+                <h3>Сеансы (даты и время)</h3>
                 <p class="section-subtitle">Добавьте несколько вариантов дат для одного мастер-класса</p>
                 <div id="sessions-container">
                     <div class="session-item" data-index="0">
@@ -78,11 +78,16 @@
                                 <label>Макс. мест</label>
                                 <input type="number" name="max_participants" min="1" value="10" required>
                             </div>
-                            <button type="button" class="remove-session-btn btn-small" style="background: #e74c3c; color: white; margin-top: 1.5rem;">🗑️</button>
+                            <button type="button" class="remove-session-btn btn-small">Удалить</button>
+                        </div>
+                        <div class="form-group" style="margin-top: 0.5rem;">
+                            <label>Ссылка на онлайн-трансляцию (для онлайн-формата)</label>
+                            <input type="url" name="meeting_link" placeholder="https://zoom.us/...">
+                            <small>* Заполняется только для онлайн-мастер-классов. Ссылка появится у записавшихся участников.</small>
                         </div>
                     </div>
                 </div>
-                <button type="button" id="add-session-btn" class="btn-outline" style="margin-top: 0.5rem;">+ Добавить ещё дату</button>
+                <button type="button" id="add-session-btn">+ Добавить ещё дату</button>
             </div>
 
             <script>
@@ -108,7 +113,12 @@
                                 <label>Макс. мест</label>
                                 <input type="number" name="max_participants" min="1" value="10" required>
                             </div>
-                            <button type="button" class="remove-session-btn btn-small" style="background: #e74c3c; color: white; margin-top: 1.5rem;">🗑️</button>
+                            <button type="button" class="remove-session-btn">Удалить</button>
+                        </div>
+                        <div class="form-group" style="margin-top: 0.5rem;">
+                            <label>Ссылка на онлайн-трансляцию (для онлайн-формата)</label>
+                            <input type="url" name="meeting_link" placeholder="https://zoom.us/...">
+                            <small>Заполняется только для онлайн-мастер-классов. Ссылка появится у записавшихся участников.</small>
                         </div>
                     `;
                     container.appendChild(newSession);
@@ -126,26 +136,19 @@
             </script>
         </div>
 
-        <!-- Цена и участники -->
+        <!-- Цена  -->
         <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
-            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">💰 Участники и цена</h3>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label>Цена (₽)</label>
-                    <input type="number" name="price" min="0" step="100" placeholder="0" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Максимум участников</label>
-                    <input type="number" name="max_participants" min="1" placeholder="10" required>
-                </div>
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">Стоимость</h3>
+            <div class="form-group">
+                <label>Цена (₽)</label>
+                <input type="number" name="price" min="0" step="100" placeholder="0" required>
+                <small>* Цена указана за одного участника</small>
             </div>
         </div>
 
         <!-- Фотографии -->
         <div style="background: white; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid var(--soft-pink);">
-            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">📷 Фотографии</h3>
+            <h3 style="margin-bottom: 1.5rem; color: var(--accent-pink);">Фотографии</h3>
 
             <div class="form-group">
                 <label>Загрузите фото мастер-класса</label>
@@ -219,5 +222,40 @@
         border-color: var(--accent-pink);
         background: rgba(232, 160, 180, 0.05);
     }
-</style>
+    #add-session-btn {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 0.5rem;
+    }
+    #add-session-btn:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+    /* Кнопка удаления сеанса */
+    .remove-session-btn {
+        background: #d48a9e !important;
+        color: white !important;
+        border: none !important;
+        padding: 0.4rem 1rem !important;
+        border-radius: 30px !important;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 1.5rem;
+    }
+
+    .remove-session-btn:hover {
+        background: #bc6f8c !important;
+        transform: translateY(-2px);
+    }
+    </style>
 {% endblock %}

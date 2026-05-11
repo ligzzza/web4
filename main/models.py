@@ -170,6 +170,12 @@ class Session(models.Model):
         default='active',
         verbose_name="Статус"
     )
+    meeting_link = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Ссылка на онлайн-трансляцию (Zoom, Яндекс.Телемост и т.д.)"
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     class Meta:

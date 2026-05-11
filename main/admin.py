@@ -4,9 +4,10 @@ from .models import User, Category, MasterClass, Image, Booking, Review, Favorit
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'current_participants', 'status']
+    list_display = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'current_participants', 'status', 'meeting_link']
     list_filter = ['status', 'masterclass']
     search_fields = ['masterclass__title']
+    fields = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'status', 'meeting_link']
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):

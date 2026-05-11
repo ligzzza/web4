@@ -12,17 +12,19 @@ from .serializers import (
 from .permissions import IsOrganizer, IsAdmin, IsOwnerOrReadOnly, IsParticipant, IsBookingOwner
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from .forms import RegisterForm, LoginForm
 from datetime import datetime
 
-from django.contrib.auth.decorators import login_required  # 👈 ЭТО ВАЖНО!
-from django.shortcuts import get_object_or_404  # 👈 ЭТО ВАЖНО!
-from django.contrib import messages  # 👈 ЭТО ВАЖНО!
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q, Min
 from django.db.models import Avg, Count
 
+from datetime import timedelta
+from django.utils import timezone
+from django.contrib import messages
+from django.db import transaction
 
 User = get_user_model()
 
@@ -454,7 +456,10 @@ def catalog_view(request):
 
     # Для каждого мастер-класса на странице получаем ближайший сеанс
     for mc in page_obj:
-        mc.nearest_session = mc.sessions.filter(status='active').order_by('start_datetime').first()
+        mc.nearest_session = mc.sessions.filter(
+            status='active',
+            start_datetime__gt=timezone.now()
+        ).order_by('start_datetime').first()
 
     # Данные для фильтров
     cities = MasterClass.objects.filter(status='approved').values_list('city', flat=True).distinct().order_by('city')
@@ -536,6 +541,7 @@ def create_masterclass_view(request):
         start_datetimes = request.POST.getlist('start_datetime')
         end_datetimes = request.POST.getlist('end_datetime')
         max_participants_list = request.POST.getlist('max_participants')
+        new_meeting_links = request.POST.getlist('new_meeting_link')
 
         for i in range(len(start_datetimes)):
             if start_datetimes[i] and end_datetimes[i]:
@@ -543,7 +549,8 @@ def create_masterclass_view(request):
                     masterclass=masterclass,
                     start_datetime=datetime.strptime(start_datetimes[i], '%Y-%m-%dT%H:%M'),
                     end_datetime=datetime.strptime(end_datetimes[i], '%Y-%m-%dT%H:%M'),
-                    max_participants=int(max_participants_list[i])
+                    max_participants=int(max_participants_list[i]),
+                    meeting_link = new_meeting_links[i] if i < len(new_meeting_links) else ''
                 )
 
         # Обработка загруженных изображений
@@ -563,7 +570,10 @@ def create_masterclass_view(request):
 def masterclass_detail_view(request, masterclass_id):
     """Детальная страница мастер-класса с отзывами"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-    sessions = masterclass.sessions.filter(status='active')
+    sessions = masterclass.sessions.filter(
+        status='active',
+        start_datetime__gt=timezone.now()
+    ).order_by('start_datetime')
 
     # Переменные по умолчанию для неавторизованных пользователей
     is_favorite = False
@@ -650,6 +660,8 @@ def edit_masterclass_view(request, masterclass_id):
                 session.start_datetime = datetime.strptime(start_datetimes[i], '%Y-%m-%dT%H:%M')
                 session.end_datetime = datetime.strptime(end_datetimes[i], '%Y-%m-%dT%H:%M')
                 session.max_participants = int(max_participants_list[i])
+                session.meeting_link = request.POST.getlist('meeting_link')[i] if request.POST.getlist(
+                    'meeting_link') else ''
                 session.save()
 
         # Добавляем новые сеансы
@@ -745,30 +757,37 @@ def add_booking_view(request, masterclass_id):
 
 @login_required
 def booking_session_view(request, session_id):
-    session = get_object_or_404(Session, id=session_id, status='active')
+    session = get_object_or_404(
+        Session,
+        id=session_id,
+        status='active',
+        start_datetime__gt=timezone.now()
+    )
     masterclass = session.masterclass
 
     if request.method == 'POST':
-        if not session.has_free_places:
-            messages.error(request, 'Свободные места закончились')
-            return redirect('masterclass_detail', masterclass_id=masterclass.id)
+        participants_count = int(request.POST.get('participants_count', 1))
 
-        Booking.objects.create(
-            participant=request.user,
-            masterclass=masterclass,
-            session=session,
-            status='confirmed',
-            payment_status='paid',
-            participants_count=1,
-            total_price=masterclass.price
-        )
-        session.current_participants += 1
-        session.save()
+        if participants_count > session.free_places:
+            messages.error(request, 'Выбрано больше мест, чем доступно')
+            return redirect('booking_session', session_id=session.id)
 
-        messages.success(request, f'Вы записались на "{masterclass.title}"')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+        # Сохраняем данные в сессию для страницы оплаты
+        request.session['booking_data'] = {
+            'session_id': session.id,
+            'participants_count': participants_count,
+            'participant_name': request.POST.get('participant_name', ''),
+            'participant_email': request.POST.get('participant_email', ''),
+            'participant_phone': request.POST.get('participant_phone', ''),
+            'comment': request.POST.get('comment', ''),
+        }
+        return redirect('payment_page', masterclass_id=masterclass.id)
 
-    return render(request, 'main/booking_session.html', {'session': session, 'masterclass': masterclass})
+    return render(request, 'main/booking_session.html', {
+        'session': session,
+        'masterclass': masterclass,
+        'max_participants': session.free_places
+    })
 
 
 @login_required
@@ -887,56 +906,51 @@ def edit_profile_ajax(request):
 
 @login_required
 def payment_page_view(request, masterclass_id):
-    """Страница оплаты мастер-класса"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     # Получаем данные из сессии
     booking_data = request.session.get('booking_data', {})
 
-    if not booking_data or booking_data.get('masterclass_id') != masterclass.id:
-        return redirect('booking_page', masterclass_id=masterclass.id)
+    if not booking_data:
+        return redirect('catalog')
 
+    session = get_object_or_404(Session, id=booking_data.get('session_id'))
     participants_count = booking_data.get('participants_count', 1)
     total_price = masterclass.price * participants_count
 
     if request.method == 'POST':
         # Создаём бронирование
-        booking = Booking.objects.create(
+        Booking.objects.create(
             participant=request.user,
             masterclass=masterclass,
+            session=session,
             status='confirmed',
             payment_status='paid',
             participants_count=participants_count,
             total_price=total_price
         )
 
-        # Увеличиваем количество участников
-        masterclass.current_participants += participants_count
-        masterclass.save()
+        # Обновляем количество участников в сеансе
+        session.current_participants += participants_count
+        session.save()
 
         # Очищаем сессию
         request.session.pop('booking_data', None)
 
-        messages.success(request, f'Вы успешно записались на мастер-класс "{masterclass.title}"!')
-        return redirect('masterclass_detail', masterclass_id=masterclass.id)
+        messages.success(request, f'Вы успешно записались на "{masterclass.title}"!')
+        return redirect('participant_dashboard')
 
     context = {
         'masterclass': masterclass,
+        'session': session,
         'participants_count': participants_count,
         'total_price': total_price,
         'participant_name': booking_data.get('participant_name', ''),
-        'participant_phone': booking_data.get('participant_phone', ''),
         'participant_email': booking_data.get('participant_email', ''),
+        'participant_phone': booking_data.get('participant_phone', ''),
         'comment': booking_data.get('comment', ''),
     }
     return render(request, 'main/payment_page.html', context)
-
-
-from datetime import timedelta
-from django.utils import timezone
-from django.contrib import messages
-from django.db import transaction
-
 
 @login_required
 def cancel_booking_view(request, booking_id):
