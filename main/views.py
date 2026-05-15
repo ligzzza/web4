@@ -1,8 +1,6 @@
 from rest_framework import permissions, viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from .models import MasterClass, Category, Booking, Review, Favorite, Notification, Image, Session
 from .serializers import (
@@ -18,13 +16,15 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
-from django.db.models import Q, Min
-from django.db.models import Avg, Count
+
+
+from django.http import HttpRequest, HttpResponse, JsonResponse
 
 from datetime import timedelta
 from django.utils import timezone
-from django.contrib import messages
 from django.db import transaction
+from .models import MasterClass, Category, User, Booking
+from .filters import MasterClassFilter
 
 User = get_user_model()
 
@@ -33,13 +33,14 @@ User = get_user_model()
 # ПАНЕЛЬ АДМИНИСТРАТОРА
 # ============================================================
 
-def is_admin(user):
+def is_admin(user: User) -> bool:
+    """Проверяет, является ли пользователь администратором."""
     return user.is_authenticated and (user.role == 'admin' or user.is_superuser)
 
 
 @login_required
-def admin_dashboard(request):
-    """Главная панель администратора"""
+def admin_dashboard(request: HttpRequest) -> HttpResponse:
+    """Главная панель администратора."""
     if not is_admin(request.user):
         messages.error(request, 'У вас нет доступа к этой странице')
         return redirect('home')
@@ -54,8 +55,8 @@ def admin_dashboard(request):
 
 
 @login_required
-def admin_masterclasses(request):
-    """Список мастер-классов для модерации"""
+def admin_masterclasses(request: HttpRequest) -> HttpResponse:
+    """Список мастер-классов для модерации."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -73,8 +74,8 @@ def admin_masterclasses(request):
 
 
 @login_required
-def admin_approve_masterclass(request, masterclass_id):
-    """Одобрение мастер-класса"""
+def admin_approve_masterclass(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Одобрение мастер-класса."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -87,8 +88,8 @@ def admin_approve_masterclass(request, masterclass_id):
 
 
 @login_required
-def admin_reject_masterclass(request, masterclass_id):
-    """Отклонение мастер-класса"""
+def admin_reject_masterclass(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Отклонение мастер-класса."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -101,8 +102,8 @@ def admin_reject_masterclass(request, masterclass_id):
 
 
 @login_required
-def admin_reviews(request):
-    """Список отзывов для модерации"""
+def admin_reviews(request: HttpRequest) -> HttpResponse:
+    """Список отзывов для модерации."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -120,8 +121,8 @@ def admin_reviews(request):
 
 
 @login_required
-def admin_approve_review(request, review_id):
-    """Одобрение отзыва"""
+def admin_approve_review(request: HttpRequest, review_id: int) -> HttpResponse:
+    """Одобрение отзыва."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -134,8 +135,8 @@ def admin_approve_review(request, review_id):
 
 
 @login_required
-def admin_delete_review(request, review_id):
-    """Удаление отзыва (для администратора)"""
+def admin_delete_review(request: HttpRequest, review_id: int) -> HttpResponse:
+    """Удаление отзыва (для администратора)."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -147,8 +148,8 @@ def admin_delete_review(request, review_id):
 
 
 @login_required
-def admin_users(request):
-    """Список пользователей для управления с поиском и фильтрацией"""
+def admin_users(request: HttpRequest) -> HttpResponse:
+    """Список пользователей для управления с поиском и фильтрацией."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -177,8 +178,8 @@ def admin_users(request):
 
 
 @login_required
-def admin_block_user(request, user_id):
-    """Блокировка пользователя"""
+def admin_block_user(request: HttpRequest, user_id: int) -> HttpResponse:
+    """Блокировка пользователя."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -197,8 +198,8 @@ def admin_block_user(request, user_id):
 
 
 @login_required
-def admin_unblock_user(request, user_id):
-    """Разблокировка пользователя"""
+def admin_unblock_user(request: HttpRequest, user_id: int) -> HttpResponse:
+    """Разблокировка пользователя."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -212,8 +213,8 @@ def admin_unblock_user(request, user_id):
 
 
 @login_required
-def admin_make_organizer(request, user_id):
-    """Назначение пользователя организатором"""
+def admin_make_organizer(request: HttpRequest, user_id: int) -> HttpResponse:
+    """Назначение пользователя организатором."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -226,8 +227,8 @@ def admin_make_organizer(request, user_id):
 
 
 @login_required
-def admin_categories(request):
-    """Управление категориями"""
+def admin_categories(request: HttpRequest) -> HttpResponse:
+    """Управление категориями."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -244,8 +245,8 @@ def admin_categories(request):
 
 
 @login_required
-def admin_edit_category(request, category_id):
-    """Редактирование категории"""
+def admin_edit_category(request: HttpRequest, category_id: int) -> HttpResponse:
+    """Редактирование категории."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -262,8 +263,8 @@ def admin_edit_category(request, category_id):
 
 
 @login_required
-def admin_delete_category(request, category_id):
-    """Удаление категории"""
+def admin_delete_category(request: HttpRequest, category_id: int) -> HttpResponse:
+    """Удаление категории."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -274,8 +275,8 @@ def admin_delete_category(request, category_id):
 
 
 @login_required
-def admin_profile_view(request):
-    """Профиль администратора"""
+def admin_profile_view(request: HttpRequest) -> HttpResponse:
+    """Профиль администратора."""
     if not is_admin(request.user):
         return redirect('home')
 
@@ -289,9 +290,10 @@ def admin_profile_view(request):
 class MasterClassViewSet(viewsets.ModelViewSet):
     queryset = MasterClass.objects.all()
     serializer_class = MasterClassSerializer
+    filterset_class = MasterClassFilter
 
-    def get_permissions(self):
-        """Назначаем разные права для разных действий"""
+    def get_permissions(self) -> list:
+        """Назначает права доступа в зависимости от действия."""
         if self.action == 'create':
             # Создавать могут только организаторы
             permission_classes = [IsOrganizer]
@@ -303,7 +305,14 @@ class MasterClassViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.IsAuthenticatedOrReadOnly]
         return [permission() for permission in permission_classes]
 
+    def get_serializer_context(self) -> dict:
+        """Передаёт request в сериализатор для поля is_favorite."""
+        context = super().get_serializer_context()
+        context.update({'request': self.request})
+        return context
+
     def get_queryset(self):
+        """Фильтрует queryset по параметрам запроса и роли пользователя."""
         queryset = super().get_queryset()
         city = self.request.query_params.get('city', None)
         if city:
@@ -315,7 +324,8 @@ class MasterClassViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(status='approved')
         return queryset
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
+        """При создании устанавливает организатора как текущего пользователя."""
         serializer.save(organizer=self.request.user)
 
 
@@ -327,7 +337,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-    def get_permissions(self):
+    def get_permissions(self) -> list:
+        """Администратор может изменять категории, остальные только читать."""
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             # Изменять категории может только администратор
             permission_classes = [IsAdmin]
@@ -343,7 +354,8 @@ class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
 
-    def get_permissions(self):
+    def get_permissions(self) -> list:
+        """Участник создаёт бронирования, владелец или админ просматривает."""
         if self.action == 'create':
             # Создавать бронирование могут только участники
             permission_classes = [IsParticipant]
@@ -353,12 +365,14 @@ class BookingViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
+        """Админ видит все бронирования, участник только свои."""
         user = self.request.user
         if user.is_admin:
             return Booking.objects.all()
         return Booking.objects.filter(participant=user)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
+        """Создаёт бронирование и обновляет количество участников."""
         masterclass = serializer.validated_data['masterclass']
         # Проверка свободных мест
         if masterclass.current_participants >= masterclass.max_participants:
@@ -381,7 +395,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        """Только одобренные отзывы для всех, все отзывы для админа"""
+        """Админ видит все отзывы, остальные только одобренные."""
         if self.request.user.is_admin:
             return Review.objects.all()
         return Review.objects.filter(status='approved')
@@ -398,11 +412,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Пользователь видит только своё избранное"""
+        """Возвращает только избранное текущего пользователя."""
         return Favorite.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        """При создании устанавливаем текущего пользователя"""
+    def perform_create(self, serializer) -> None:
+        """При создании устанавливает пользователя как текущего."""
         serializer.save(user=self.request.user)
 
 
@@ -423,6 +437,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
+        """Обрабатывает POST-запрос на регистрацию."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -437,6 +452,7 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        """Обрабатывает POST-запрос на вход."""
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -459,11 +475,15 @@ class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """Обрабатывает POST-запрос на выход."""
         logout(request)
         return Response({"message": "Выход выполнен успешно"})
 
 
-def register_view(request):
+def register_view(request: HttpRequest) -> HttpResponse:
+    """Отображает и обрабатывает форму регистрации пользователя.
+    Args:request: HTTP-запрос
+    Returns:HttpResponse: Страница регистрации или перенаправление"""
     if request.user.is_authenticated:
         if request.user.role == 'organizer':
             return redirect('organizer_dashboard')
@@ -485,7 +505,10 @@ def register_view(request):
     return render(request, 'main/register.html', {'form': form})
 
 
-def login_view(request):
+def login_view(request: HttpRequest) -> HttpResponse:
+    """Отображает и обрабатывает форму входа пользователя.
+    Args:request: HTTP-запрос
+    Returns:HttpResponse: Страница входа или перенаправление"""
     if request.user.is_authenticated:
         # Если уже залогинен, перенаправляем по роли
         if request.user.role == 'organizer':
@@ -516,14 +539,15 @@ def login_view(request):
     return render(request, 'main/login.html', {'error': error})
 
 
-def logout_view(request):
+def logout_view(request: HttpRequest) -> HttpResponse:
+    """Выполняет выход пользователя и перенаправляет на страницу входа."""
     logout(request)
     return redirect('/login/')
 
 
 @login_required
-def participant_dashboard(request):
-    """Страница участника с его бронированиями"""
+def participant_dashboard(request: HttpRequest) -> HttpResponse:
+    """Страница участника с его активными бронированиями."""
 
     # Показываем только активные бронирования (не отменённые)
     bookings = Booking.objects.filter(
@@ -543,8 +567,8 @@ def participant_dashboard(request):
 
 
 @login_required
-def session_participants_view(request, session_id):
-    """Страница организатора со списком участников сеанса"""
+def session_participants_view(request: HttpRequest, session_id: int) -> HttpResponse:
+    """Страница организатора со списком участников сеанса."""
     session = get_object_or_404(Session, id=session_id)
     masterclass = session.masterclass
 
@@ -565,9 +589,11 @@ def session_participants_view(request, session_id):
     return render(request, 'main/session_participants.html', context)
 
 @login_required
-def organizer_dashboard(request):
-    """Страница организатора с его мастер-классами"""
-    my_masterclasses = MasterClass.objects.filter(organizer=request.user).order_by('-created_at')
+def organizer_dashboard(request: HttpRequest) -> HttpResponse:
+    """Страница организатора с его мастер-классами."""
+    my_masterclasses = MasterClass.objects.filter(
+        organizer=request.user
+    ).select_related('category').prefetch_related('sessions').order_by('-created_at')
 
     # Для каждого мастер-класса добавляем первый сеанс
     for mc in my_masterclasses:
@@ -584,10 +610,8 @@ def organizer_dashboard(request):
 # ============================================================
 
 
-def home_view(request):
-    """Главная страница"""
-    from .models import MasterClass, Category, User, Booking
-    from django.db.models import Avg, Count, Sum
+def home_view(request: HttpRequest) -> HttpResponse:
+    """Главная страница с лучшими и популярными мастер-классами."""
 
     # Лучшие по отзывам
     top_masterclasses = MasterClass.objects.filter(
@@ -627,11 +651,15 @@ def home_view(request):
 
 from django.db.models import Avg, Count, Sum, Min, Q, F
 
-def catalog_view(request):
-    """Каталог мастер-классов с фильтрацией, поиском и пагинацией"""
+def catalog_view(request: HttpRequest) -> HttpResponse:
+    """Каталог мастер-классов с фильтрацией, поиском и пагинацией."""
 
     # Базовый запрос — только одобренные мастер-классы
-    masterclasses = MasterClass.objects.filter(status='approved')
+    masterclasses = MasterClass.objects.filter(
+        status='approved'
+    ).select_related('category', 'organizer').prefetch_related(
+        'sessions', 'images'
+    )
 
     # 1. ПОИСК по названию и описанию
     search_query = request.GET.get('search', '').strip()
@@ -709,29 +737,24 @@ def catalog_view(request):
 
 
 @login_required
-def profile_view(request):
-    """Профиль пользователя (универсальный)"""
+def profile_view(request: HttpRequest) -> HttpResponse:
+    """Профиль пользователя (универсальный)."""
     return render(request, 'main/profile.html', {'user': request.user})
 
 @login_required
-def favorites_list_view(request):
-    """Список избранного"""
+def favorites_list_view(request: HttpRequest) -> HttpResponse:
+    """Страница избранного текущего пользователя."""
     favorites = Favorite.objects.filter(user=request.user)
     return render(request, 'main/favorites.html', {'favorites': favorites})
-
-
 
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from .models import MasterClass, Booking, Favorite, Category
 
-
-
-
 @login_required
-def create_masterclass_view(request):
-    """Создание мастер-класса с сеансами (только организатор и админ)"""
+def create_masterclass_view(request: HttpRequest) -> HttpResponse:
+    """Создание мастер-класса с сеансами (только организатор и админ)."""
     if request.user.role != 'organizer' and not request.user.is_admin:
         return redirect('home')
 
@@ -790,9 +813,14 @@ def create_masterclass_view(request):
 
     return render(request, 'main/create_masterclass.html', {'categories': categories})
 
-def masterclass_detail_view(request, masterclass_id):
-    """Детальная страница мастер-класса с отзывами"""
-    masterclass = get_object_or_404(MasterClass, id=masterclass_id)
+def masterclass_detail_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Детальная страница мастер-класса с отзывами и сеансами."""
+    masterclass = get_object_or_404(
+        MasterClass.objects.select_related('category', 'organizer').prefetch_related(
+            'sessions', 'images', 'reviews__author'
+        ),
+        id=masterclass_id
+    )
     sessions = masterclass.sessions.filter(
         status='active',
         start_datetime__gt=timezone.now()
@@ -850,8 +878,8 @@ def masterclass_detail_view(request, masterclass_id):
 
 
 @login_required
-def edit_masterclass_view(request, masterclass_id):
-    """Редактирование мастер-класса и его сеансов"""
+def edit_masterclass_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Редактирование мастер-класса и его сеансов."""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     if request.user != masterclass.organizer and not request.user.is_admin:
@@ -912,11 +940,10 @@ def edit_masterclass_view(request, masterclass_id):
     return render(request, 'main/edit_masterclass.html', context)
 
 
-from django.http import JsonResponse
 
 @login_required
-def add_favorite_view(request, masterclass_id):
-    """Добавление в избранное (асинхронно)"""
+def add_favorite_view(request: HttpRequest, masterclass_id: int) -> JsonResponse:
+    """Добавление мастер-класса в избранное (асинхронно)."""
     if request.method == 'POST':
         masterclass = get_object_or_404(MasterClass, id=masterclass_id)
         favorite, created = Favorite.objects.get_or_create(
@@ -928,8 +955,8 @@ def add_favorite_view(request, masterclass_id):
 
 
 @login_required
-def remove_favorite_view(request, masterclass_id):
-    """Удаление из избранного"""
+def remove_favorite_view(request: HttpRequest, masterclass_id: int) -> JsonResponse:
+    """Удаление мастер-класса из избранного."""
     if request.method == 'POST':
         Favorite.objects.filter(
             user=request.user,
@@ -940,8 +967,8 @@ def remove_favorite_view(request, masterclass_id):
 
 
 @login_required
-def add_booking_view(request, masterclass_id):
-    """Бронирование мастер-класса"""
+def add_booking_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Бронирование мастер-класса."""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     # Проверка: есть ли свободные места
@@ -979,7 +1006,8 @@ def add_booking_view(request, masterclass_id):
 
 
 @login_required
-def booking_session_view(request, session_id):
+def booking_session_view(request: HttpRequest, session_id: int) -> HttpResponse:
+    """Страница бронирования конкретного сеанса."""
     session = get_object_or_404(
         Session,
         id=session_id,
@@ -987,6 +1015,10 @@ def booking_session_view(request, session_id):
         start_datetime__gt=timezone.now()
     )
     masterclass = session.masterclass
+
+    if request.user == masterclass.organizer:
+        messages.error(request, 'Вы не можете записаться на свой мастер-класс')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     if request.method == 'POST':
         participants_count = int(request.POST.get('participants_count', 1))
@@ -1014,8 +1046,8 @@ def booking_session_view(request, session_id):
 
 
 @login_required
-def booking_detail_view(request, booking_id):
-    """Детальная страница бронирования"""
+def booking_detail_view(request: HttpRequest, booking_id: int) -> HttpResponse:
+    """Детальная страница бронирования."""
     booking = get_object_or_404(Booking, id=booking_id, participant=request.user)
     session = booking.session
     masterclass = booking.masterclass
@@ -1027,15 +1059,15 @@ def booking_detail_view(request, booking_id):
     }
     return render(request, 'main/booking_detail.html', context)
 
-def custom_logout_view(request):
-    """Выход из системы"""
+def custom_logout_view(request: HttpRequest) -> HttpResponse:
+    """Выход из системы с перенаправлением на главную."""
     logout(request)
     return redirect('home')
 
 
 
-def delete_masterclass_view(request, masterclass_id):
-    """Удаление мастер-класса (только владелец или админ)"""
+def delete_masterclass_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Удаление мастер-класса (только владелец или администратор)."""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     # Проверка прав
@@ -1051,7 +1083,8 @@ def delete_masterclass_view(request, masterclass_id):
 
 
 @login_required
-def add_review_view(request, masterclass_id):
+def add_review_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Добавление отзыва на мастер-класс (обработка POST)."""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     if request.method == 'POST':
@@ -1077,15 +1110,9 @@ def add_review_view(request, masterclass_id):
     return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
 
-@login_required
-def favorites_list_view(request):
-    """Страница избранного"""
-    favorites = Favorite.objects.filter(user=request.user)
-    return render(request, 'main/favorites.html', {'favorites': favorites})
 
-
-def profile_simple_view(request):
-    """Простой профиль для теста"""
+def profile_simple_view(request: HttpRequest) -> HttpResponse:
+    """Тестовая страница профиля (упрощённая версия)."""
     return render(request, 'main/profile_simple.html', {'user': request.user})
 
 
@@ -1098,8 +1125,10 @@ from .forms import UserEditForm
 
 
 @login_required
-def edit_profile_ajax(request):
-    """AJAX редактирование профиля"""
+def edit_profile_ajax(request: HttpRequest) -> JsonResponse:
+    """AJAX-обработчик редактирования профиля пользователя.
+    Args:request: HTTP-запрос с данными формы
+    Returns:JsonResponse: Результат операции (успех/ошибка и обновлённые данные)"""
     if request.method == 'POST':
         if request.user.role == 'organizer':
             form = OrganizerEditForm(request.POST, request.FILES, instance=request.user)
@@ -1128,7 +1157,11 @@ def edit_profile_ajax(request):
 
 
 @login_required
-def payment_page_view(request, masterclass_id):
+def payment_page_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
+    """Страница оплаты мастер-класса.
+    Args:request: HTTP-запрос
+        masterclass_id: ID мастер-класса
+    Returns:HttpResponse: Страница оплаты или перенаправление"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
 
     # Получаем данные из сессии
@@ -1176,8 +1209,11 @@ def payment_page_view(request, masterclass_id):
     return render(request, 'main/payment_page.html', context)
 
 @login_required
-def cancel_booking_view(request, booking_id):
-    """Отмена бронирования"""
+def cancel_booking_view(request: HttpRequest, booking_id: int) -> HttpResponse:
+    """Отмена бронирования пользователем.
+    Args:request: HTTP-запрос
+        booking_id: ID бронирования
+    Returns:HttpResponse: Перенаправление или страница подтверждения"""
     print("=== cancel_booking_view ВЫЗВАНА ===")
     print(f"Booking ID: {booking_id}")
     print(f"Method: {request.method}")
@@ -1248,7 +1284,11 @@ def cancel_booking_view(request, booking_id):
 from django.http import JsonResponse
 
 
-def edit_review_view(request, review_id):
+def edit_review_view(request: HttpRequest, review_id: int) -> HttpResponse:
+    """Редактирование отзыва пользователя.
+    Args:request: HTTP-запрос
+        review_id: ID отзыва
+    Returns:HttpResponse: Страница редактирования или перенаправление"""
     review = get_object_or_404(Review, id=review_id, author=request.user)
     masterclass = review.masterclass
 
@@ -1267,7 +1307,11 @@ def edit_review_view(request, review_id):
     })
 
 
-def delete_review_view(request, review_id):
+def delete_review_view(request: HttpRequest, review_id: int) -> HttpResponse:
+    """Удаление отзыва пользователя.
+    Args:request: HTTP-запрос
+        review_id: ID отзыва
+    Returns:HttpResponse: Перенаправление на страницу мастер-класса"""
     review = get_object_or_404(Review, id=review_id, author=request.user)
     masterclass_id = review.masterclass.id
     review.delete()

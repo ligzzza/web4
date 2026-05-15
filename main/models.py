@@ -2,12 +2,10 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
-# ============================================================
-# 1. ПОЛЬЗОВАТЕЛЬ (расширенная модель пользователя Django)
-# ============================================================
-
+# 1. ПОЛЬЗОВАТЕЛЬ
 class User(AbstractUser):
     """Модель пользователя с ролями Участник/Организатор/Администратор"""
 
@@ -35,26 +33,26 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
         swappable = 'AUTH_USER_MODEL'  # Указывает, что это кастомная модель
 
-    def __str__(self):
+    def __str__(self)-> str:
+        """Возвращает строковое представление пользователя."""
         return f"{self.get_full_name() or self.username} ({self.get_role_display()})"
 
     @property
-    def is_admin(self):
+    def is_admin(self) -> bool:
+        """Проверяет, является ли пользователь администратором."""
         return self.role == 'admin' or self.is_superuser
 
     @property
-    def is_organizer(self):
+    def is_organizer(self) -> bool:
+        """Проверяет, является ли пользователь организатором."""
         return self.role == 'organizer'
 
     @property
-    def is_participant(self):
+    def is_participant(self) -> bool:
+        """Проверяет, является ли пользователь участником."""
         return self.role == 'participant'
 
-
-# ============================================================
 # 2. КАТЕГОРИЯ
-# ============================================================
-
 class Category(models.Model):
     """Категория мастер-классов (Кулинария, Творчество и т.д.)"""
 
@@ -69,14 +67,11 @@ class Category(models.Model):
         verbose_name_plural = "Категории"
         ordering = ['name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает название категории."""
         return self.name
 
-
-# ============================================================
 # 3. МАСТЕР-КЛАСС
-# ============================================================
-
 class MasterClass(models.Model):
     """Мастер-класс (мероприятие)"""
 
@@ -121,16 +116,25 @@ class MasterClass(models.Model):
             models.Index(fields=['category']),
             models.Index(fields=['status']),
         ]
+    def clean(self) -> None:
+        """Валидация: уникальность названия у одного организатора."""
+        # Проверка: у одного организатора не может быть двух мастер-классов с одинаковым названием
+        if MasterClass.objects.filter(
+            organizer=self.organizer,
+            title__iexact=self.title
+        ).exclude(pk=self.pk).exists():
+            raise ValidationError({'title': 'У вас уже есть мастер-класс с таким названием'})
 
-    def __str__(self):
+    def save(self, *args, **kwargs) -> None:
+        """Сохраняет мастер-класс с предварительной валидацией."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        """Возвращает строковое представление мастер-класса."""
         return f"{self.title} - {self.city}"
 
-
-
-# ============================================================
 # 4. ИЗОБРАЖЕНИЕ
-# ============================================================
-
 class Image(models.Model):
     """Изображения для мастер-класса"""
 
@@ -144,7 +148,8 @@ class Image(models.Model):
         verbose_name = "Изображение"
         verbose_name_plural = "Изображения"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает строковое представление изображения."""
         return f"Фото для {self.masterclass.title}"
 
 # СЕССИИ
@@ -184,20 +189,31 @@ class Session(models.Model):
         verbose_name_plural = "Сеансы"
         ordering = ['start_datetime']
 
-    def __str__(self):
+    def clean(self) -> None:
+        """Валидация: дата окончания должна быть позже даты начала."""
+        if self.end_datetime <= self.start_datetime:
+            raise ValidationError({'end_datetime': 'Дата окончания должна быть позже даты начала'})
+
+    def save(self, *args, **kwargs) -> None:
+        """Сохраняет сеанс с предварительной валидацией."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        """Возвращает строковое представление сеанса."""
         return f"{self.masterclass.title} - {self.start_datetime.strftime('%d.%m.%Y %H:%M')}"
 
     @property
-    def free_places(self):
+    def free_places(self) -> int:
+        """Возвращает количество свободных мест."""
         return self.max_participants - self.current_participants
 
     @property
-    def has_free_places(self):
+    def has_free_places(self) -> bool:
+        """Проверяет, есть ли свободные места."""
         return self.current_participants < self.max_participants
-# ============================================================
-# 5. БРОНИРОВАНИЕ
-# ============================================================
 
+# 5. БРОНИРОВАНИЕ
 class Booking(models.Model):
     """Бронирование места на мастер-класс"""
 
@@ -241,20 +257,17 @@ class Booking(models.Model):
         ordering = ['-created_at']
         #unique_together = ['participant', 'masterclass']  # Запрет повторной записи на одно мероприятие
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает строковое представление бронирования."""
         return f"{self.participant.get_full_name()} → {self.masterclass.title}"
 
-    def save(self, *args, **kwargs):
-        # Автоматически фиксируем цену на момент бронирования
+    def save(self, *args, **kwargs) -> None:
+        """Сохраняет бронирование, автоматически рассчитывая итоговую цену."""
         if not self.total_price:
             self.total_price = self.masterclass.price * self.participants_count
         super().save(*args, **kwargs)
 
-
-# ============================================================
 # 6. ОТЗЫВ
-# ============================================================
-
 class Review(models.Model):
     """Отзыв на мастер-класс"""
 
@@ -280,14 +293,12 @@ class Review(models.Model):
         verbose_name_plural = "Отзывы"
         ordering = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает строковое представление отзыва."""
         return f"Отзыв от {self.author.get_full_name()} на {self.masterclass.title} (оценка: {self.rating})"
 
 
-# ============================================================
 # 7. ИЗБРАННОЕ
-# ============================================================
-
 class Favorite(models.Model):
     """Избранные мастер-классы пользователя"""
 
@@ -301,14 +312,11 @@ class Favorite(models.Model):
         verbose_name_plural = "Избранное"
         unique_together = ['user', 'masterclass']  # Нельзя добавить одно и то же дважды
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает строковое представление избранного."""
         return f"{self.user.get_full_name()} → {self.masterclass.title}"
 
-
-# ============================================================
 # 8. УВЕДОМЛЕНИЕ
-# ============================================================
-
 class Notification(models.Model):
     """Уведомления пользователей"""
 
@@ -332,7 +340,6 @@ class Notification(models.Model):
         verbose_name_plural = "Уведомления"
         ordering = ['-created_at']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Возвращает строковое представление уведомления."""
         return f"{self.title} для {self.user.get_full_name()}"
-
-

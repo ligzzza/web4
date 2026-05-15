@@ -1,6 +1,8 @@
-from django import forms
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django import forms
+from .models import User, Image
 
 User = get_user_model()
 
@@ -14,14 +16,20 @@ class RegisterForm(forms.ModelForm):
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'phone', 'role', 'organization_name']
 
-    def clean_password2(self):
+    def clean_password2(self) -> str:
+        """Проверяет, совпадают ли введённые пароли.
+        Returns:str: Второй пароль, если проверка пройдена
+        Raises:ValidationError: Если пароли не совпадают"""
         password = self.cleaned_data.get('password')
         password2 = self.cleaned_data.get('password2')
         if password and password2 and password != password2:
             raise forms.ValidationError('Пароли не совпадают')
         return password2
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> User:
+        """Сохраняет пользователя с хешированным паролем.
+        Args:commit: Сохранять ли объект в БД (по умолчанию True)
+        Returns:User: Сохранённый объект пользователя"""
         user = super().save(commit=False)
         user.set_password(self.cleaned_data['password'])
         if commit:
@@ -30,12 +38,14 @@ class RegisterForm(forms.ModelForm):
 
 
 class LoginForm(forms.Form):
+    """Форма для входа пользователя."""
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
 
 from .models import Image
 
 class ImageForm(forms.ModelForm):
+    """Форма для загрузки изображений мастер-класса."""
     class Meta:
         model = Image
         fields = ['image', 'is_main']
@@ -44,10 +54,8 @@ class ImageForm(forms.ModelForm):
             'is_main': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
 
-from django import forms
-from .models import User
-
 class UserEditForm(forms.ModelForm):
+    """Форма редактирования профиля для участника."""
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone', 'avatar']
@@ -60,6 +68,7 @@ class UserEditForm(forms.ModelForm):
         }
 
 class OrganizerEditForm(forms.ModelForm):
+    """Форма редактирования профиля для организатора (доп. поле "Название студии")."""
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone', 'organization_name', 'avatar']
