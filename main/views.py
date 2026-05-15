@@ -320,7 +320,10 @@ class MasterClassViewSet(viewsets.ModelViewSet):
         category = self.request.query_params.get('category', None)
         if category:
             queryset = queryset.filter(category__slug=category)
-        if not self.request.user.is_admin and not self.request.user.is_organizer:
+        if self.request.user.is_authenticated:
+            if not self.request.user.is_admin and not self.request.user.is_organizer:
+                queryset = queryset.filter(status='approved')
+        else:
             queryset = queryset.filter(status='approved')
         return queryset
 
