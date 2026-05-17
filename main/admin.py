@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import User, Category, MasterClass, Image, Booking, Review, Favorite, Notification, Session
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
 @admin.register(Session)
@@ -9,11 +10,33 @@ class SessionAdmin(admin.ModelAdmin):
     search_fields = ['masterclass__title']
     fields = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'status', 'meeting_link']
 
+
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'email', 'role', 'is_active', 'date_joined']
-    list_filter = ['role', 'is_active']
-    search_fields = ['username', 'email']
+class UserAdmin(BaseUserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_active', 'is_blocked')
+    list_filter = ('role', 'is_active', 'is_blocked')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Персональная информация', {'fields': ('first_name', 'last_name', 'email', 'phone', 'avatar')}),
+        ('Права доступа', {'fields': ('role', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Для организатора', {'fields': ('organization_name', 'organization_description')}),
+        ('Блокировка', {'fields': ('is_blocked',)}),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('username', 'email', 'password1', 'password2', 'role'),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        """Хеширует пароль при сохранении"""
+        if 'password' in form.changed_data:
+            obj.set_password(obj.password)
+        super().save_model(request, obj, form, change)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

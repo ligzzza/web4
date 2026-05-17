@@ -1,5 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from . import views
 
 router = DefaultRouter()
@@ -16,6 +18,9 @@ urlpatterns = [
     path('api/register/', views.RegisterView.as_view(), name='api_register'),
     path('api/login/', views.LoginView.as_view(), name='api_login'),
     path('api/logout/', views.LogoutView.as_view(), name='api_logout'),
+
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Web страницы
     path('', views.home_view, name='home'),
@@ -63,6 +68,6 @@ urlpatterns = [
     path('control/categories/', views.admin_categories, name='admin_categories'),
     path('control/category/<int:category_id>/edit/', views.admin_edit_category, name='admin_edit_category'),
     path('control/category/<int:category_id>/delete/', views.admin_delete_category, name='admin_delete_category'),
-
+    path('control/bookings/', views.admin_bookings_history, name='admin_bookings_history'),
     path('control/profile/', views.admin_profile_view, name='admin_profile'),
 ]

@@ -67,8 +67,14 @@ def admin_masterclasses(request: HttpRequest) -> HttpResponse:
     else:
         masterclasses = MasterClass.objects.filter(status=status_filter).order_by('-created_at')
 
+    # Пагинация
+    paginator = Paginator(masterclasses, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'main/admin_masterclasses.html', {
         'masterclasses': masterclasses,
+        'page_obj': page_obj,
         'current_status': status_filter,
     })
 
@@ -114,8 +120,14 @@ def admin_reviews(request: HttpRequest) -> HttpResponse:
     else:
         reviews = Review.objects.filter(status=status_filter).order_by('-created_at')
 
+    # Пагинация
+    paginator = Paginator(reviews, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'main/admin_reviews.html', {
         'reviews': reviews,
+        'page_obj': page_obj,
         'current_status': status_filter,
     })
 
@@ -170,8 +182,14 @@ def admin_users(request: HttpRequest) -> HttpResponse:
     if role_filter != 'all':
         users = users.filter(role=role_filter)
 
+    # Пагинация
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'main/admin_users.html', {
         'users': users,
+        'page_obj': page_obj,
         'search_query': search_query,
         'role_filter': role_filter,
     })
@@ -283,6 +301,40 @@ def admin_profile_view(request: HttpRequest) -> HttpResponse:
     return render(request, 'main/admin_profile.html', {'user': request.user})
 
 
+@login_required
+def admin_bookings_history(request: HttpRequest) -> HttpResponse:
+    """Отображает историю всех бронирований для администратора.
+    Args:
+        request: HTTP-запрос от администратора
+    Returns:
+        HttpResponse: Страница со списком всех бронирований и статистикой"""
+    # Проверка прав доступа
+    if not is_admin(request.user):
+        return redirect('home')
+
+    # Получаем все бронирования с оптимизацией запросов
+    bookings = Booking.objects.all().select_related(
+        'participant',
+        'masterclass',
+        'session'
+    ).order_by('-created_at')
+
+    # Пагинация
+    paginator = Paginator(bookings, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Выручка (без пагинации)
+    total_revenue = sum(b.total_price for b in bookings if b.payment_status == 'paid')
+
+    context: dict = {
+        'bookings': bookings,
+        'page_obj': page_obj,
+        'total_bookings': bookings.count(),
+        'total_revenue': total_revenue,
+    }
+
+    return render(request, 'main/admin_bookings_history.html', context)
 # ============================================================
 # VIEWSETS ДЛЯ МАСТЕР-КЛАССОВ
 # ============================================================
@@ -656,7 +708,6 @@ from django.db.models import Avg, Count, Sum, Min, Q, F
 
 def catalog_view(request: HttpRequest) -> HttpResponse:
     """Каталог мастер-классов с фильтрацией, поиском и пагинацией."""
-
     # Базовый запрос — только одобренные мастер-классы
     masterclasses = MasterClass.objects.filter(
         status='approved'
@@ -1097,7 +1148,7 @@ def add_review_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
         user_booking = Booking.objects.filter(
             participant=request.user,
             masterclass=masterclass,
-            status='completed'
+            status='pending'
         ).first()
 
         if user_booking and not Review.objects.filter(author=request.user, masterclass=masterclass).exists():

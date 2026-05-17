@@ -1213,7 +1213,7 @@
                     </a>
                     {% endif %}
                     {% if user.role == 'admin' or user.is_superuser %}
-                        <a href="{% url 'admin_dashboard' %}" style="color: var(--accent-pink);">👑 Админка</a>
+                        <a href="{% url 'admin_dashboard' %}" style="color: var(--accent-pink);">Админка</a>
                     {% endif %}
                     <a href="
                         {% if user.role == 'organizer' %}

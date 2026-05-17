@@ -9,7 +9,8 @@ urlpatterns = [
     path('api/', include('main.urls')),
     path('api/users/', UserListView.as_view(), name='user-list'),
     path('api-auth/', include('rest_framework.urls')),
-    path('', include('main.urls')),  # Все URL из main/urls.py (включая register/, login/ и т.д.)
+    path('', include('main.urls')),
+    path('silk/', include('silk.urls', namespace='silk')),
 ]
 
 # Для работы с медиафайлами (изображения) в режиме разработки

@@ -1,0 +1,127 @@
+{% extends 'main/admin_base.html' %}
+
+{% block title %}История бронирований{% endblock %}
+{% block page_title %}История бронирований{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>{{ total_bookings }}</h3>
+        <p>Всего бронирований</p>
+    </div>
+    <div class="stat-card">
+        <h3>{{ total_revenue|floatformat:0 }} ₽</h3>
+        <p>Общая выручка</p>
+    </div>
+</div>
+
+<div class="bookings-table">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Участник</th>
+                <th>Мастер-класс</th>
+                <th>Дата сеанса</th>
+                <th>Кол-во мест</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+                <th>Оплата</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>#{{ booking.id }}</td>
+                <td>{{ booking.participant.first_name }} {{ booking.participant.last_name }}</td>
+                <td>{{ booking.masterclass.title }}</td>
+                <td>{{ booking.session.start_datetime|date:"d.m.Y H:i" }}</td>
+                <td>{{ booking.participants_count }}</td>
+                <td>{{ booking.total_price }} ₽</td>
+                <td>
+                    <span class="status {{ booking.status }}">
+                        {% if booking.status == 'confirmed' %}Подтверждено
+                        {% elif booking.status == 'completed' %}Завершено
+                        {% elif booking.status == 'cancelled' %}Отменено
+                        {% else %}Ожидает{% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="status {{ booking.payment_status }}">
+                        {% if booking.payment_status == 'paid' %}💰 Оплачено
+                        {% elif booking.payment_status == 'refunded' %}↩️ Возврат
+                        {% else %}Ожидает{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center;">Нет бронирований</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page=1" class="page-link">« Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="page-link">← Предыдущая</a>
+    {% endif %}
+
+    <span class="page-current">
+        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="page-link">Следующая →</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}
+<style>
+    .bookings-table {
+        background: white;
+        border-radius: 20px;
+        padding: 1rem;
+        border: 1px solid var(--soft-pink);
+        overflow-x: auto;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 0.8rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    
+    th {
+        color: var(--accent-pink);
+        font-weight: 600;
+    }
+    
+    .status {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status.confirmed, .status.paid { background: #c8e6c9; color: #2e7d32; }
+    .status.completed { background: #bbdefb; color: #1565c0; }
+    .status.cancelled, .status.refunded { background: #ffcdd2; color: #c62828; }
+    .status.pending { background: #ffe0b2; color: #e65100; }
+    
+    @media (max-width: 768px) {
+        th, td {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}

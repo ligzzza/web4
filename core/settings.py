@@ -1,6 +1,12 @@
 import os
 from pathlib import Path
+import sentry_sdk
 
+sentry_sdk.init(
+    dsn="https://856993dd90d84064c765dd71e420c609@o4511406016692224.ingest.de.sentry.io/4511406353154128",
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,7 +29,7 @@ INSTALLED_APPS = [
     'django_filters',
     # Third party apps
     'rest_framework',
-    
+    'silk',
     # Local apps
     'main',
 ]
@@ -36,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 
@@ -115,6 +122,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
