@@ -427,16 +427,24 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Booking.objects.filter(participant=user)
 
     def perform_create(self, serializer) -> None:
-        """Создаёт бронирование и обновляет количество участников."""
-        masterclass = serializer.validated_data['masterclass']
-        # Проверка свободных мест
-        if masterclass.current_participants >= masterclass.max_participants:
+        """Создаёт бронирование и обновляет количество участников в сеансе."""
+        session = serializer.validated_data.get('session')
+        participants_count = serializer.validated_data.get('participants_count', 1)
+
+        # Проверка: есть ли свободные места в сеансе
+        if not session or not session.has_free_places:
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"detail": "Свободные места закончились"})
-        serializer.save(participant=self.request.user, total_price=masterclass.price)
-        # Обновляем количество участников
-        masterclass.current_participants += 1
-        masterclass.save()
+
+        # Сохраняем бронирование
+        serializer.save(
+            participant=self.request.user,
+            total_price=session.masterclass.price * participants_count
+        )
+
+        # Обновляем количество участников в сеансе
+        session.current_participants += participants_count
+        session.save()
 
 
 # ============================================================
@@ -549,7 +557,9 @@ def register_view(request: HttpRequest) -> HttpResponse:
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            user.add_default_permissions()  # Добавляем права
             login(request, user)
+
             if user.role == 'organizer':
                 return redirect('organizer_dashboard')
             else:

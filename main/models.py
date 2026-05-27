@@ -52,6 +52,55 @@ class User(AbstractUser):
         """Проверяет, является ли пользователь участником."""
         return self.role == 'participant'
 
+    def add_default_permissions(self):
+        """Добавляет Django-права в зависимости от роли пользователя"""
+        from django.contrib.auth.models import Permission
+
+        # Базовые права для всех авторизованных пользователей
+        base_permissions = Permission.objects.filter(
+            codename__in=[
+                'view_masterclass',
+                'view_category',
+            ]
+        )
+        self.user_permissions.add(*base_permissions)
+
+        # Права для участника
+        if self.role == 'participant':
+            participant_permissions = Permission.objects.filter(
+                codename__in=[
+                    'add_booking',
+                    'view_booking',
+                    'change_booking',
+                    'add_review',
+                    'view_review',
+                    'change_review',
+                    'add_favorite',
+                    'view_favorite',
+                ]
+            )
+            self.user_permissions.add(*participant_permissions)
+
+        # Права для организатора (всё, что у участника + свои)
+        elif self.role == 'organizer':
+            organizer_permissions = Permission.objects.filter(
+                codename__in=[
+                    'add_booking',
+                    'view_booking',
+                    'change_booking',
+                    'add_review',
+                    'view_review',
+                    'change_review',
+                    'add_favorite',
+                    'view_favorite',
+                    'add_masterclass',
+                    'change_masterclass',
+                    'delete_masterclass',
+                    'view_masterclass',
+                ]
+            )
+            self.user_permissions.add(*organizer_permissions)
+
 # 2. КАТЕГОРИЯ
 class Category(models.Model):
     """Категория мастер-классов (Кулинария, Творчество и т.д.)"""
