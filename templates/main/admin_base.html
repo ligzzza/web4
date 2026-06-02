@@ -265,24 +265,24 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">ОСНОВНОЕ</div>
                 <ul class="sidebar-menu">
-                    <li><a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">📊 Главная</a></li>
+                    <li><a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">Главная</a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">МОДЕРАЦИЯ</div>
                 <ul class="sidebar-menu">
-                    <li><a href="{% url 'admin_masterclasses' %}" class="{% if 'admin_masterclasses' in request.path %}active{% endif %}">📋 Мастер-классы</a></li>
-                    <li><a href="{% url 'admin_reviews' %}" class="{% if 'admin_reviews' in request.path %}active{% endif %}">⭐ Отзывы</a></li>
+                    <li><a href="{% url 'admin_masterclasses' %}" class="{% if 'admin_masterclasses' in request.path %}active{% endif %}">Мастер-классы</a></li>
+                    <li><a href="{% url 'admin_reviews' %}" class="{% if 'admin_reviews' in request.path %}active{% endif %}">Отзывы</a></li>
                 </ul>
             </div>
 
             <div class="sidebar-section">
                 <div class="sidebar-title">УПРАВЛЕНИЕ</div>
                 <ul class="sidebar-menu">
-                    <li><a href="{% url 'admin_users' %}" class="{% if 'admin_users' in request.path %}active{% endif %}">👥 Пользователи</a></li>
-                    <li><a href="{% url 'admin_categories' %}" class="{% if 'admin_categories' in request.path %}active{% endif %}">📂 Категории</a></li>
-                    <li><a href="{% url 'admin_bookings_history' %}" class="{% if 'admin_bookings_history' in request.path %}active{% endif %}">📅 Бронирования</a></li>
+                    <li><a href="{% url 'admin_users' %}" class="{% if 'admin_users' in request.path %}active{% endif %}">Пользователи</a></li>
+                    <li><a href="{% url 'admin_categories' %}" class="{% if 'admin_categories' in request.path %}active{% endif %}">Категории</a></li>
+                    <li><a href="{% url 'admin_bookings_history' %}" class="{% if 'admin_bookings_history' in request.path %}active{% endif %}">Бронирования</a></li>
                 </ul>
             </div>
         </aside>

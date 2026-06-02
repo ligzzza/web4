@@ -1,0 +1,382 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Все сеансы — {{ masterclass.title }}{% endblock %}
+
+{% block content %}
+<div class="sessions-page">
+    <!-- Хлебные крошки -->
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Главная</a> /
+        <a href="{% url 'catalog' %}">Каталог</a> /
+        <a href="{% url 'masterclass_detail' masterclass.id %}">{{ masterclass.title }}</a> /
+        <span>Все сеансы</span>
+    </div>
+
+    <div class="sessions-header">
+        <h1>Все сеансы</h1>
+        <p class="masterclass-title">{{ masterclass.title }}</p>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filters-bar">
+        <form method="get" class="filters-form">
+            <div class="filter-group">
+                <label>Формат</label>
+                <select name="format">
+                    <option value="">Любой</option>
+                    <option value="offline" {% if format_filter == 'offline' %}selected{% endif %}>Офлайн</option>
+                    <option value="online" {% if format_filter == 'online' %}selected{% endif %}>Онлайн</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Месяц</label>
+                <select name="month">
+                    <option value="">Любой месяц</option>
+                    {% for month in available_months %}
+                        <option value="{{ month|date:'Y-m' }}" {% if month_filter == month|date:'Y-m' %}selected{% endif %}>
+                            {{ month|date:'F Y' }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Мест от</label>
+                <input type="number" name="min_places" value="{{ min_places }}" placeholder="Минимум мест" min="1">
+            </div>
+
+            <div class="filter-group">
+                <label>Сортировка</label>
+                <select name="sort">
+                    <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>По дате (сначала ближайшие)</option>
+                    <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>По дате (сначала дальние)</option>
+                    <option value="places_asc" {% if sort_by == 'places_asc' %}selected{% endif %}>По местам (сначала свободные)</option>
+                    <option value="places_desc" {% if sort_by == 'places_desc' %}selected{% endif %}>По местам (сначала занятые)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-filter">Применить</button>
+            {% if format_filter or min_places or month_filter or sort_by != 'date_asc' %}
+                <a href="." class="btn-reset">Сбросить</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Сеансы по месяцам -->
+    {% if sessions_by_month %}
+        {% for month, sessions_list in sessions_by_month.items %}
+        <div class="month-section">
+            <h2 class="month-title">{{ month }}</h2>
+            <div class="sessions-grid">
+                {% for session in sessions_list %}
+                <div class="session-card">
+                    <div class="session-date-large">
+                        <span class="session-day">{{ session.start_datetime|date:"d" }}</span>
+                        <span class="session-month">{{ session.start_datetime|date:"M" }}</span>
+                    </div>
+                    <div class="session-details">
+                        <div class="session-time">
+                            {{ session.start_datetime|date:"H:i" }} — {{ session.end_datetime|date:"H:i" }}
+                        </div>
+                        <div class="session-info-row">
+                            <span class="info-tag">📍 {{ session.masterclass.city }}</span>
+                            <span class="info-tag">🎯 {{ session.masterclass.get_format_display }}</span>
+                        </div>
+                        <div class="session-places-info">
+                            Свободно: {{ session.free_places }} из {{ session.max_participants }}
+                        </div>
+                        {% if session.meeting_link %}
+                            <div class="session-online-tag">Онлайн-трансляция</div>
+                        {% endif %}
+                    </div>
+                    <div class="session-action">
+                        {% if user.is_authenticated and user.role == 'participant' %}
+                            {% if session.has_free_places %}
+                                <a href="{% url 'booking_session' session.id %}" class="btn-book">Записаться</a>
+                            {% else %}
+                                <button class="btn-book disabled" disabled>❌ Мест нет</button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn-book">Войдите, чтобы записаться</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>Нет доступных сеансов</p>
+            <a href="{% url 'catalog' %}" class="btn">Вернуться в каталог</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .sessions-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .breadcrumbs {
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 1rem;
+    }
+
+    .breadcrumbs a {
+        color: var(--accent-pink);
+        text-decoration: none;
+    }
+
+    .breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+
+    .sessions-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .sessions-header h1 {
+        font-size: 1.8rem;
+        color: var(--dark-text);
+        margin-bottom: 0.3rem;
+    }
+
+    .masterclass-title {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    /* Фильтры */
+    .filters-bar {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--soft-pink);
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .filters-form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    .filter-group label {
+        font-size: 0.7rem;
+        color: #888;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 0.4rem 0.8rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 30px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.85rem;
+        background: white;
+        min-width: 120px;
+    }
+
+    .btn-filter {
+        background: var(--accent-pink);
+        color: white;
+        border: none;
+        padding: 0.4rem 1.2rem;
+        border-radius: 30px;
+        cursor: pointer;
+    }
+
+    .btn-reset {
+        background: #f5f5f5;
+        color: #555;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+
+    /* Месяцы */
+    .month-section {
+        margin-bottom: 2rem;
+    }
+
+    .month-title {
+        font-size: 1.2rem;
+        color: var(--accent-pink);
+        margin-bottom: 1rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 2px solid var(--soft-pink);
+    }
+
+    .sessions-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .session-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        transition: all 0.3s;
+    }
+
+    .session-card:hover {
+        border-color: var(--accent-pink);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .session-date-large {
+        text-align: center;
+        min-width: 70px;
+        background: #fafafa;
+        border-radius: 12px;
+        padding: 0.5rem;
+    }
+
+    .session-day {
+        display: block;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--accent-pink);
+        line-height: 1;
+    }
+
+    .session-month {
+        display: block;
+        font-size: 0.7rem;
+        color: #888;
+        text-transform: uppercase;
+    }
+
+    .session-details {
+        flex: 1;
+    }
+
+    .session-time {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .session-info-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.3rem;
+    }
+
+    .info-tag {
+        background: #f5f5f5;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: #666;
+    }
+
+    .session-places-info {
+        font-size: 0.8rem;
+        color: #888;
+    }
+
+    .session-online-tag {
+        font-size: 0.7rem;
+        color: #4CAF50;
+        margin-top: 0.2rem;
+    }
+
+    .btn-book {
+        display: inline-block;
+        padding: 0.5rem 1.2rem;
+        background: #d48a9e;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+
+    .btn-book:hover {
+        background: #bc6f8c;
+        transform: translateY(-2px);
+    }
+
+    .btn-book.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 700px) {
+        .sessions-page {
+            padding: 1rem;
+        }
+
+        .filters-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .session-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .session-info-row {
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // Перевод месяцев на русский
+    document.querySelectorAll('.month-title').forEach(el => {
+        const months = {
+            'January': 'Январь', 'February': 'Февраль', 'March': 'Март',
+            'April': 'Апрель', 'May': 'Май', 'June': 'Июнь',
+            'July': 'Июль', 'August': 'Август', 'September': 'Сентябрь',
+            'October': 'Октябрь', 'November': 'Ноябрь', 'December': 'Декабрь'
+        };
+        for (let [eng, rus] of Object.entries(months)) {
+            if (el.textContent.includes(eng)) {
+                el.textContent = el.textContent.replace(eng, rus);
+            }
+        }
+    });
+</script>
+{% endblock %}

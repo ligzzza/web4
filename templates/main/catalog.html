@@ -11,7 +11,7 @@
         <form method="get" id="search-form">
             <div style="display: flex; gap: 1rem; align-items: flex-end;">
                 <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">🔍 Поиск мастер-классов</label>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Поиск мастер-классов</label>
                     <input type="text" name="search" value="{{ search_query }}" placeholder="Название или описание..." style="width: 100%; padding: 0.8rem 1rem; border-radius: 30px; border: 1px solid #e0e0e0;">
                 </div>
                 <button type="submit" class="btn" style="padding: 0.8rem 1.5rem;">Найти</button>
@@ -23,7 +23,7 @@
 
         {% if search_query %}
             <div style="margin-top: 1rem; padding: 0.5rem; background: var(--soft-pink); border-radius: 30px; text-align: center;">
-                🔎 Результаты поиска по запросу <strong>"{{ search_query }}"</strong>: найдено <strong>{{ page_obj.paginator.count }}</strong> мастер-классов
+                Результаты поиска по запросу <strong>"{{ search_query }}"</strong>: найдено <strong>{{ page_obj.paginator.count }}</strong> мастер-классов
             </div>
         {% endif %}
     </div>
@@ -35,7 +35,7 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>📍 Город</label>
+                    <label>Город</label>
                     <select name="city" style="width: 100%;" onchange="this.form.submit()">
                         <option value="">Все города</option>
                         {% for city in cities %}
@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>🎯 Формат</label>
+                    <label>Формат</label>
                     <select name="format" style="width: 100%;" onchange="this.form.submit()">
                         <option value="">Любой</option>
                         <option value="offline" {% if format_filter == 'offline' %}selected{% endif %}>Офлайн</option>
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>📂 Категория</label>
+                    <label>Категория</label>
                     <select name="category" style="width: 100%;" onchange="this.form.submit()">
                         <option value="">Все категории</option>
                         {% for cat in categories %}
@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>🔄 Сортировка</label>
+                    <label>Сортировка</label>
                     <select name="sort" style="width: 100%;" onchange="this.form.submit()">
                         <option value="date" {% if sort_by == 'date' %}selected{% endif %}>По дате (сначала ближайшие)</option>
                         <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>По дате (сначала дальние)</option>
@@ -112,7 +112,7 @@
                 {{ mc.category.name }}
             </span>
 
-            <a href="{% url 'masterclass_detail' mc.id %}" class="btn" style="margin-top: auto; text-align: center;">Подробнее →</a>
+            <a href="{% url 'masterclass_detail' mc.id %}" class="btn" style="margin-top: auto; text-align: center;">Подробнее</a>
         </div>
         {% empty %}
         <div style="grid-column: span 2; text-align: center; padding: 3rem;">

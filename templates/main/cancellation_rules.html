@@ -1,0 +1,67 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Правила отмены — MasterGrad{% endblock %}
+
+{% block content %}
+<div class="cancellation-page" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--dark-text);">Правила отмены бронирования</h1>
+    <p style="color: #666; margin-bottom: 2rem;">Условия и порядок отмены записи на мастер-класс</p>
+
+    <div class="rules-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="rule-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Стандартный срок</div>
+            <p style="margin: 0;">Отмена возможна не позднее чем за 24 часа до начала мастер-класса.</p>
+        </div>
+        <div class="rule-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Поздняя отмена</div>
+            <p style="margin: 0;">При отмене менее чем за 24 часа возврат денег не производится.</p>
+        </div>
+        <div class="rule-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Отмена организатором</div>
+            <p style="margin: 0;">Если мастер-класс отменён организатором, вы получаете полный возврат.</p>
+        </div>
+        <div class="rule-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Срок возврата</div>
+            <p style="margin: 0;">Деньги возвращаются в течение 3-5 рабочих дней на карту оплаты.</p>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.2rem;">Как отменить</h3>
+                <div style="margin-bottom: 0.8rem;">
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">1. Личный кабинет</div>
+                    <p style="font-size: 0.9rem; color: #666;">Перейдите в раздел "Мои бронирования".</p>
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">2. Выберите запись</div>
+                    <p style="font-size: 0.9rem; color: #666;">Найдите нужный мастер-класс в списке.</p>
+                </div>
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">3. Нажмите "Отменить"</div>
+                    <p style="font-size: 0.9rem; color: #666;">Подтвердите действие в появившемся окне.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.2rem;">Важно знать</h3>
+                <ul style="margin-left: 1rem; line-height: 1.8; color: #555;">
+                    <li>После отмены место становится доступно другим участникам</li>
+                    <li>Вы получите письмо-подтверждение об отмене</li>
+                    <li>При технических проблемах свяжитесь с поддержкой</li>
+                    <li>Возврат возможен только при отмене через сайт</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem; background: #f9f9f9;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 0.8rem; font-size: 1rem;">Нужна помощь?</h3>
+        <p style="margin: 0;">Свяжитесь с нами: <strong>+7 (965) 112-46-76</strong> или <strong>galova.liza06@gmail.com</strong></p>
+    </div>
+</div>
+{% endblock %}

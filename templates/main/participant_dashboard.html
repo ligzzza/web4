@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container" style="max-width: 900px;">
     <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 2rem; color: var(--dark-text);">🎓 Мой профиль</h2>
+        <h2 style="font-size: 2rem; color: var(--dark-text);">Мой профиль</h2>
         <p style="color: #666;">Добро пожаловать, {{ user.first_name|default:user.username }}!</p>
     </div>
 
@@ -18,9 +18,9 @@
 
         <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
             {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
+                <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
             {% else %}
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
                     👤
                 </div>
             {% endif %}
@@ -33,39 +33,15 @@
         </div>
     </div>
 
-     <!-- Мои записи (первые 3, остальные по кнопке) -->
+    <!-- Мои записи -->
     <div class="bookings-card">
         <h3>Мои записи</h3>
 
-        {% if bookings %}
-            <!-- Первые 3 бронирования -->
-            {% for booking in bookings|slice:":3" %}
-            <div class="booking-item">
-                <div class="booking-info">
-                    <strong>{{ booking.masterclass.title }}</strong>
-                    <div class="booking-details">
-                        📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
-                    </div>
-                    <div class="booking-date">
-                        📅 {{ booking.session.start_datetime|date:"d.m.Y H:i" }}
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
-                    <a href="{% url 'cancel_booking' booking.id %}" class="btn-small" style="background: #d48a9e; color: white;" onclick="return confirm('Отменить запись?')">Отменить</a>
-                </div>
-            </div>
-            {% endfor %}
-
-            <!-- Кнопка "Показать все", если бронирований больше 3 -->
-            {% if bookings|length > 3 %}
-            <div class="show-more-container">
-                <button id="showMoreBtn" class="btn-outline" style="margin-top: 1rem;">Показать все записи ({{ bookings|length }})</button>
-            </div>
-
-            <!-- Скрытые бронирования (остальные) -->
-            <div id="hiddenBookings" style="display: none;">
-                {% for booking in bookings|slice:"3:" %}
+        <!-- Активные записи -->
+        <div class="sub-section">
+            <h4>Активные записи</h4>
+            {% if upcoming_bookings %}
+                {% for booking in upcoming_bookings %}
                 <div class="booking-item">
                     <div class="booking-info">
                         <strong>{{ booking.masterclass.title }}</strong>
@@ -78,22 +54,46 @@
                     </div>
                     <div class="booking-actions">
                         <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
-                        <a href="{% url 'cancel_booking' booking.id %}" class="btn-small" style="background: #d48a9e; color: white;" onclick="return confirm('Отменить запись?')">Отменить</a>
+                        <a href="{% url 'cancel_booking' booking.id %}" class="btn-small cancel-btn" onclick="return confirm('Отменить запись?')">Отменить</a>
                     </div>
                 </div>
                 {% endfor %}
-                <button id="hideBtn" class="btn-outline" style="margin-top: 1rem;">Скрыть</button>
-            </div>
+            {% else %}
+                <p class="empty-message">Нет активных записей</p>
             {% endif %}
-        {% else %}
-            <p class="empty-message">У вас пока нет активных записей</p>
-        {% endif %}
+        </div>
+
+        <!-- Завершённые записи -->
+        <div class="sub-section">
+            <h4>Завершённые записи</h4>
+            {% if past_bookings %}
+                {% for booking in past_bookings %}
+                <div class="booking-item past">
+                    <div class="booking-info">
+                        <strong>{{ booking.masterclass.title }}</strong>
+                        <div class="booking-details">
+                            📍 {{ booking.masterclass.city }} • {{ booking.masterclass.get_format_display }}
+                        </div>
+                        <div class="booking-date">
+                            📅 {{ booking.session.start_datetime|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    <div class="booking-actions">
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-message">Нет завершённых записей</p>
+            {% endif %}
+        </div>
     </div>
+
 <!-- Модальное окно редактирования профиля -->
 <div id="editModal" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>✏️ Редактирование профиля</h3>
+            <h3>Редактирование профиля</h3>
             <span class="close">&times;</span>
         </div>
 
@@ -262,28 +262,92 @@
         }
         return cookieValue;
     }
-
-    // Показать все бронирования
-    const showMoreBtn = document.getElementById('showMoreBtn');
-    const hiddenBookings = document.getElementById('hiddenBookings');
-    const hideBtn = document.getElementById('hideBtn');
-
-    if (showMoreBtn) {
-        showMoreBtn.onclick = function() {
-            hiddenBookings.style.display = 'block';
-            showMoreBtn.style.display = 'none';
-        }
-    }
-
-    if (hideBtn) {
-        hideBtn.onclick = function() {
-            hiddenBookings.style.display = 'none';
-            showMoreBtn.style.display = 'block';
-        }
-    }
 </script>
 
 <style>
+    .booking-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .cancel-btn {
+        background: #d48a9e !important;
+        color: white !important;
+    }
+
+    .cancel-btn:hover {
+        background: #bc6f8c !important;
+    }
+
+    .past {
+        opacity: 0.8;
+    }
+
+    @media (max-width: 600px) {
+        .booking-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .booking-actions {
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .booking-actions .btn-small {
+            flex: 1;
+            text-align: center;
+        }
+    }
+        .booking-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .cancel-btn {
+        background: #d48a9e !important;
+        color: white !important;
+    }
+
+    .cancel-btn:hover {
+        background: #bc6f8c !important;
+    }
+
+    .past {
+        opacity: 0.8;
+    }
+
+    .sub-section {
+        margin-top: 1.2rem;
+        padding-top: 0.5rem;
+    }
+
+    .sub-section h4 {
+        font-size: 1 rem;
+        color: var(--accent-pink);
+        margin-bottom: 0.8rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1px dashed var(--soft-pink);
+    }
+
+    @media (max-width: 600px) {
+        .booking-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .booking-actions {
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .booking-actions .btn-small {
+            flex: 1;
+            text-align: center;
+        }
+    }
     body.modal-open {
         overflow: hidden;
     }
@@ -347,14 +411,14 @@
 
     .modal-header h3 {
         font-family: 'Jost', sans-serif;
-        font-size: 1.5rem;
+        font-size: 1.7rem;
         font-weight: 600;
         color: var(--accent-pink);
         margin: 0;
     }
 
     .close {
-        font-size: 1.8rem;
+        font-size: 1.9rem;
         cursor: pointer;
         color: #aaa;
         transition: all 0.3s;
@@ -386,7 +450,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 12px;
         font-family: 'Jost', sans-serif;
-        font-size: 0.95rem;
+        font-size: 1 rem;
     }
 
     .modal .form-group input:focus {
@@ -445,7 +509,7 @@
     .btn-small {
         font-family: 'Jost', sans-serif;
         font-weight: 500;
-        font-size: 0.85rem;
+        font-size: 1 rem;
         padding: 0.4rem 1rem;
         border-radius: 30px;
         background: var(--soft-blue);

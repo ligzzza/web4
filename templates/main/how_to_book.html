@@ -1,0 +1,61 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Как записаться — MasterGrad{% endblock %}
+
+{% block content %}
+<div class="how-to-book-page" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--dark-text);">Как записаться</h1>
+    <p style="color: #666; margin-bottom: 2rem;">Пошаговая инструкция по бронированию места на мастер-класс</p>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 40px; height: 40px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">1</div>
+            <h3 style="margin: 0; color: var(--dark-text);">Найдите мастер-класс</h3>
+        </div>
+        <p style="margin-left: 3rem;">Используйте каталог, поиск или фильтры по городу, категории и цене, чтобы найти подходящее мероприятие.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 40px; height: 40px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">2</div>
+            <h3 style="margin: 0; color: var(--dark-text);">Выберите дату и время</h3>
+        </div>
+        <p style="margin-left: 3rem;">На странице мастер-класса выберите удобный сеанс из доступных дат. Каждый сеанс показывает количество свободных мест и формат проведения (онлайн или офлайн).</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 40px; height: 40px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">3</div>
+            <h3 style="margin: 0; color: var(--dark-text);">Заполните данные</h3>
+        </div>
+        <p style="margin-left: 3rem;">Укажите количество участников, контактные данные (имя, email, телефон) и при необходимости — комментарий для организатора.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 40px; height: 40px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">4</div>
+            <h3 style="margin: 0; color: var(--dark-text);">Оплатите участие</h3>
+        </div>
+        <p style="margin-left: 3rem;">Оплата происходит онлайн банковской картой. После успешной оплаты вы получите подтверждение бронирования на указанную электронную почту.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 40px; height: 40px; background: var(--accent-pink); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">5</div>
+            <h3 style="margin: 0; color: var(--dark-text);">Получите напоминание</h3>
+        </div>
+        <p style="margin-left: 3rem;">За день до мастер-класса мы пришлём напоминание на email и в личный кабинет. Для онлайн-формата вы также получите ссылку на трансляцию за час до начала.</p>
+    </div>
+
+    <div class="card" style="background: #f9f9f9;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 0.8rem;">💡 Полезные советы</h3>
+        <ul style="margin-left: 1.2rem; line-height: 1.8;">
+            <li>Записывайтесь заранее — популярные мастер-классы быстро заполняются</li>
+            <li>Добавляйте понравившиеся мероприятия в избранное, чтобы не потерять</li>
+            <li>Читайте отзывы других участников перед записью</li>
+            <li>При отмене делайте это не позднее чем за 24 часа</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

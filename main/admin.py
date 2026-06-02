@@ -3,6 +3,14 @@ from .models import User, Category, MasterClass, Image, Booking, Review, Favorit
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
+class ImageInline(admin.TabularInline):
+    """Inline-форма для добавления изображений прямо из карточки мастер-класса"""
+    model = Image
+    extra = 3
+    fields = ['image', 'is_main']
+    verbose_name = "Изображение"
+    verbose_name_plural = "Изображения"
+
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
     list_display = ['masterclass', 'start_datetime', 'end_datetime', 'max_participants', 'current_participants', 'status', 'meeting_link']
@@ -48,6 +56,7 @@ class MasterClassAdmin(admin.ModelAdmin):
     list_display = ['title', 'organizer', 'city', 'format', 'price', 'status', 'created_at']
     list_filter = ['status', 'city', 'format', 'category']
     search_fields = ['title', 'description']
+    inlines = [ImageInline]
 
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):

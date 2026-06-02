@@ -12,18 +12,20 @@
     <!-- Личная информация -->
     <div class="info-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="color: var(--accent-pink); margin: 0;">👤 Информация</h3>
+            <h3 style="color: var(--accent-pink); margin: 0;">Информация</h3>
             <button id="editProfileBtn" class="btn-small" style="background: var(--soft-blue); color: var(--dark-text); border: none; cursor: pointer;"> Редактировать</button>
         </div>
 
         <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
-            {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
-            {% else %}
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-                    🏢
-                </div>
-            {% endif %}
+            <div style="text-align: center;">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
+                {% else %}
+                    <div style="width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid var(--accent-pink);">
+                        🏢
+                    </div>
+                {% endif %}
+            </div>
             <div style="flex: 1;">
                 <p><strong>Название студии:</strong> <span id="display-org-name">{{ user.organization_name|default:"Не указано" }}</span></p>
                 <p><strong>Имя:</strong> <span id="display-first-name">{{ user.first_name|default:"Не указано" }}</span></p>
@@ -36,7 +38,7 @@
 
     <!-- Мои мастер-классы -->
     <div class="bookings-card">
-        <h3>🎯 Мои мастер-классы</h3>
+        <h3>Мои мастер-классы</h3>
         {% if my_masterclasses %}
             {% for mc in my_masterclasses|slice:":3" %}
             <div class="booking-item">
@@ -47,24 +49,36 @@
                     </div>
                     {% with mc.sessions.all.0 as first_session %}
                         {% if first_session %}
-                            <div class="booking-date">
-                                📅 {{ first_session.start_datetime|date:"d.m.Y H:i" }}
-                            </div>
-                            <div class="booking-status">
-                                <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
-                                    {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
-                                </span>
-                                <span class="status paid">👥 {{ first_session.current_participants }}/{{ first_session.max_participants }}</span>
-                            </div>
+                            {% if first_session.start_datetime > now %}
+                                <div class="booking-date">
+                                    📅 {{ first_session.start_datetime|date:"d.m.Y H:i" }}
+                                </div>
+                                <div class="booking-status">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% elif mc.status == 'pending' %}pending{% else %}rejected{% endif %}">
+                                        {% if mc.status == 'approved' %}Одобрен{% elif mc.status == 'pending' %}На модерации{% else %}❌ Отклонен{% endif %}
+                                    </span>
+                                    <span class="status paid">{{ first_session.current_participants }}/{{ first_session.max_participants }}</span>
+                                </div>
+                            {% else %}
+                                <div class="booking-date">
+                                    📅 Нет активных сеансов
+                                </div>
+                                <div class="booking-status">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% elif mc.status == 'pending' %}pending{% else %}rejected{% endif %}">
+                                        {% if mc.status == 'approved' %}Одобрен{% elif mc.status == 'pending' %}На модерации{% else %}❌ Отклонен{% endif %}
+                                    </span>
+                                    <span class="status paid">Нет сеансов для записи</span>
+                                </div>
+                            {% endif %}
                         {% else %}
                             <div class="booking-date">
-                                📅 Дата не указана
+                                📅 Нет сеансов
                             </div>
                             <div class="booking-status">
-                                <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
-                                    {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
+                                <span class="status {% if mc.status == 'approved' %}confirmed{% elif mc.status == 'pending' %}pending{% else %}rejected{% endif %}">
+                                    {% if mc.status == 'approved' %}Одобрен{% elif mc.status == 'pending' %}На модерации{% else %}❌ Отклонен{% endif %}
                                 </span>
-                                <span class="status paid">👥 Нет сеансов</span>
+                                <span class="status paid">Нет сеансов</span>
                             </div>
                         {% endif %}
                     {% endwith %}
@@ -91,7 +105,7 @@
                                     📅 {{ first_session.start_datetime|date:"d.m.Y H:i" }}
                                 </div>
                                 <div class="booking-status">
-                                    <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% elif mc.status == 'pending' %}pending{% else %}rejected{% endif %}">
                                         {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
                                     </span>
                                     <span class="status paid">👥 {{ first_session.current_participants }}/{{ first_session.max_participants }}</span>
@@ -101,7 +115,7 @@
                                     📅 Дата не указана
                                 </div>
                                 <div class="booking-status">
-                                    <span class="status {% if mc.status == 'approved' %}confirmed{% else %}pending{% endif %}">
+                                    <span class="status {% if mc.status == 'approved' %}confirmed{% elif mc.status == 'pending' %}pending{% else %}rejected{% endif %}">
                                         {% if mc.status == 'approved' %}✅ Одобрен{% elif mc.status == 'pending' %}⏳ На модерации{% else %}❌ Отклонен{% endif %}
                                     </span>
                                     <span class="status paid">👥 Нет сеансов</span>
@@ -125,7 +139,7 @@
 <div id="editModal" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3> Редактирование профиля</h3>
+            <h3>Редактирование профиля</h3>
             <span class="close">&times;</span>
         </div>
 
@@ -138,17 +152,26 @@
                 <div class="form-group avatar-group">
                     <label>Фото профиля</label>
 
+                    <div class="current-avatar-preview">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Аватар" id="currentAvatar" class="avatar-preview-img">
+                        {% else %}
+                            <div id="currentAvatar" class="avatar-preview-placeholder">🏢</div>
+                        {% endif %}
+                    </div>
+
                     <div class="file-upload-wrapper">
                         <label for="avatar-upload" class="file-upload-label">
                             <span class="upload-icon">📷</span>
-                            <span>Выбрать фото</span>
+                            <span>Выбрать новое фото</span>
                         </label>
                         <input type="file" name="avatar" id="avatar-upload" accept="image/*" style="display: none;">
                         <small class="upload-hint">JPG, PNG до 5MB</small>
                     </div>
+
                     <div id="newAvatarPreview" style="display: none; margin-top: 1rem;">
                         <p style="font-size: 0.8rem; color: #888;">Новое фото:</p>
-                        <img id="newAvatarImg" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-pink);">
+                        <img id="newAvatarImg" class="avatar-preview-img">
                     </div>
                 </div>
 
@@ -182,136 +205,6 @@
     </div>
 </div>
 
-<script>
-    // Модальное окно
-    const modal = document.getElementById('editModal');
-    const editBtn = document.getElementById('editProfileBtn');
-    const closeSpan = document.querySelector('.close');
-    const cancelBtn = document.querySelector('.cancel-btn');
-
-    editBtn.onclick = function() {
-        modal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-        document.getElementById('edit-org-name').value = document.getElementById('display-org-name').innerText;
-        document.getElementById('edit-first-name').value = document.getElementById('display-first-name').innerText;
-        document.getElementById('edit-last-name').value = document.getElementById('display-last-name').innerText;
-        document.getElementById('edit-email').value = document.getElementById('display-email').innerText;
-        document.getElementById('edit-phone').value = document.getElementById('display-phone').innerText;
-    }
-
-    function closeModal() {
-        modal.style.display = 'none';
-        document.body.classList.remove('modal-open');
-        document.getElementById('editMessage').innerHTML = '';
-    }
-
-    closeSpan.onclick = closeModal;
-    cancelBtn.onclick = closeModal;
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            closeModal();
-        }
-    }
-
-    // Отправка формы через AJAX
-    document.getElementById('editProfileForm').onsubmit = async function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        try {
-            const response = await fetch('/profile/edit-ajax/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                document.getElementById('display-org-name').innerText = data.organization_name || 'Не указано';
-                document.getElementById('display-first-name').innerText = data.first_name || 'Не указано';
-                document.getElementById('display-last-name').innerText = data.last_name || 'Не указано';
-                document.getElementById('display-email').innerText = data.email;
-                document.getElementById('display-phone').innerText = data.phone || 'Не указан';
-
-                if (data.avatar_url) {
-                    const avatarContainer = document.querySelector('.info-card img, .info-card .avatar-placeholder');
-                    if (avatarContainer) {
-                        if (avatarContainer.tagName === 'IMG') {
-                            avatarContainer.src = data.avatar_url + '?t=' + Date.now();
-                        } else {
-                            avatarContainer.outerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">`;
-                        }
-                    }
-                }
-
-                document.getElementById('editMessage').innerHTML = '<div class="alert success">✅ Профиль обновлён!</div>';
-                setTimeout(closeModal, 1500);
-            } else {
-                document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
-            }
-        } catch (error) {
-            document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
-        }
-    }
-
-    // Предпросмотр нового аватара
-    const avatarInput = document.getElementById('avatar-upload');
-    if (avatarInput) {
-        avatarInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const previewDiv = document.getElementById('newAvatarPreview');
-                    const previewImg = document.getElementById('newAvatarImg');
-                    previewImg.src = event.target.result;
-                    previewDiv.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // Показать все мастер-классы
-    const showMoreBtn = document.getElementById('showMoreBtn');
-    const hiddenMasterclasses = document.getElementById('hiddenMasterclasses');
-    const hideBtn = document.getElementById('hideBtn');
-
-    if (showMoreBtn) {
-        showMoreBtn.onclick = function() {
-            hiddenMasterclasses.style.display = 'block';
-            showMoreBtn.style.display = 'none';
-        }
-    }
-
-    if (hideBtn) {
-        hideBtn.onclick = function() {
-            hiddenMasterclasses.style.display = 'none';
-            showMoreBtn.style.display = 'block';
-        }
-    }
-</script>
-
 <style>
     body.modal-open {
         overflow: hidden;
@@ -342,7 +235,6 @@
         border: 1px solid var(--soft-pink);
     }
 
-    /* Стили для скроллбара */
     .modal-content::-webkit-scrollbar {
         width: 6px;
     }
@@ -489,7 +381,7 @@
         background: #a8d4c0;
     }
 
-    /* Стили для загрузки аватара */
+    /* Стили для аватарок */
     .avatar-group {
         text-align: center;
     }
@@ -501,22 +393,22 @@
     }
 
     .avatar-preview-img {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid var(--accent-pink);
     }
 
     .avatar-preview-placeholder {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue));
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
+        font-size: 3rem;
         border: 3px solid var(--accent-pink);
     }
 
@@ -554,5 +446,264 @@
         color: #888;
         font-size: 0.7rem;
     }
+
+    /* Статусы мастер-классов - исправленные цвета */
+    .status {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .status.confirmed {
+        background: #e8f5e9;
+        color: #4a7c59;
+    }
+
+    .status.pending {
+        background: #fff3e0;
+        color: #c47d2e;
+    }
+
+    .status.rejected {
+        background: #fdecea;
+        color: #b15c4a;
+    }
+
+    .status.paid {
+        background: #f0f0f0;
+        color: #888;
+    }
+
+    .show-more-container {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .btn-outline {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        border: none;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-outline:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .booking-item {
+        border-bottom: 1px solid #eee;
+        padding: 1rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .booking-item:last-child {
+        border-bottom: none;
+    }
+
+    .booking-info {
+        flex: 1;
+    }
+
+    .booking-details {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .booking-date {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .booking-status {
+        margin-top: 0.3rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .info-card, .bookings-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .info-card h3, .bookings-card h3 {
+        color: var(--accent-pink);
+        margin-bottom: 1rem;
+    }
+
+    .empty-message {
+        color: #888;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    @media (max-width: 600px) {
+        .booking-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
 </style>
+
+<script>
+    // Модальное окно
+    const modal = document.getElementById('editModal');
+    const editBtn = document.getElementById('editProfileBtn');
+    const closeSpan = document.querySelector('.close');
+    const cancelBtn = document.querySelector('.cancel-btn');
+
+    if (editBtn) {
+        editBtn.onclick = function() {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+            document.getElementById('edit-org-name').value = document.getElementById('display-org-name').innerText;
+            document.getElementById('edit-first-name').value = document.getElementById('display-first-name').innerText;
+            document.getElementById('edit-last-name').value = document.getElementById('display-last-name').innerText;
+            document.getElementById('edit-email').value = document.getElementById('display-email').innerText;
+            document.getElementById('edit-phone').value = document.getElementById('display-phone').innerText;
+        }
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        const msgDiv = document.getElementById('editMessage');
+        if (msgDiv) msgDiv.innerHTML = '';
+    }
+
+    if (closeSpan) closeSpan.onclick = closeModal;
+    if (cancelBtn) cancelBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // Предпросмотр нового аватара
+    const avatarInput = document.getElementById('avatar-upload');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewDiv = document.getElementById('newAvatarPreview');
+                    const previewImg = document.getElementById('newAvatarImg');
+                    previewImg.src = event.target.result;
+                    previewDiv.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Отправка формы через AJAX
+    const editForm = document.getElementById('editProfileForm');
+    if (editForm) {
+        editForm.onsubmit = async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/profile/edit-ajax/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('display-org-name').innerText = data.organization_name || 'Не указано';
+                    document.getElementById('display-first-name').innerText = data.first_name || 'Не указано';
+                    document.getElementById('display-last-name').innerText = data.last_name || 'Не указано';
+                    document.getElementById('display-email').innerText = data.email;
+                    document.getElementById('display-phone').innerText = data.phone || 'Не указан';
+
+                    if (data.avatar_url) {
+                        const currentAvatar = document.getElementById('currentAvatar');
+                        if (currentAvatar) {
+                            if (currentAvatar.tagName === 'IMG') {
+                                currentAvatar.src = data.avatar_url + '?t=' + Date.now();
+                            } else {
+                                currentAvatar.outerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" id="currentAvatar" class="avatar-preview-img">`;
+                            }
+                        }
+                        // Обновляем аватар на главной странице
+                        const mainAvatar = document.querySelector('.info-card img[alt="Аватар"]');
+                        if (mainAvatar) {
+                            mainAvatar.src = data.avatar_url + '?t=' + Date.now();
+                        } else {
+                            const avatarPlaceholder = document.querySelector('.info-card div[style*="140px"]');
+                            if (avatarPlaceholder && avatarPlaceholder.innerHTML.includes('🏢')) {
+                                avatarPlaceholder.outerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">`;
+                            }
+                        }
+                    }
+
+                    document.getElementById('editMessage').innerHTML = '<div class="alert success">✅ Профиль обновлён!</div>';
+                    setTimeout(closeModal, 1500);
+                } else {
+                    document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+                }
+            } catch (error) {
+                document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+            }
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Показать все мастер-классы
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    const hiddenMasterclasses = document.getElementById('hiddenMasterclasses');
+    const hideBtn = document.getElementById('hideBtn');
+
+    if (showMoreBtn) {
+        showMoreBtn.onclick = function() {
+            hiddenMasterclasses.style.display = 'block';
+            showMoreBtn.style.display = 'none';
+        }
+    }
+
+    if (hideBtn) {
+        hideBtn.onclick = function() {
+            hiddenMasterclasses.style.display = 'none';
+            showMoreBtn.style.display = 'block';
+        }
+    }
+</script>
 {% endblock %}

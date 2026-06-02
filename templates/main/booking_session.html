@@ -5,18 +5,18 @@
 {% block content %}
 <div class="container" style="max-width: 600px;">
     <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 2rem; color: var(--dark-text);">📝 Бронирование</h2>
+        <h2 style="font-size: 2rem; color: var(--dark-text);">Бронирование</h2>
         <p style="color: #666;">Заполните данные для записи</p>
     </div>
     
     <div class="info-card" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">{{ masterclass.title }}</h3>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <p><strong>📅 Дата сеанса:</strong> {{ session.start_datetime|date:"d.m.Y H:i" }}</p>
-            <p><strong>📍 Место:</strong> {{ masterclass.city }}, {{ masterclass.address }}</p>
-            <p><strong>🎯 Формат:</strong> {{ masterclass.get_format_display }}</p>
-            <p><strong>👥 Свободных мест:</strong> {{ session.free_places }} / {{ session.max_participants }}</p>
-            <p><strong>💰 Цена за место:</strong> {{ masterclass.price }} ₽</p>
+            <p><strong>Дата сеанса:</strong> {{ session.start_datetime|date:"d.m.Y H:i" }}</p>
+            <p><strong>Место:</strong> {{ masterclass.city }}, {{ masterclass.address }}</p>
+            <p><strong>Формат:</strong> {{ masterclass.get_format_display }}</p>
+            <p><strong>Свободных мест:</strong> {{ session.free_places }} / {{ session.max_participants }}</p>
+            <p><strong>Цена за место:</strong> {{ masterclass.price }} ₽</p>
         </div>
     </div>
 

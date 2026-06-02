@@ -285,8 +285,6 @@ class Booking(models.Model):
         Session,
         on_delete=models.CASCADE,
         related_name='bookings',
-        null=True,
-        blank=True,
         verbose_name="Сеанс"
     )
     masterclass = models.ForeignKey(MasterClass, on_delete=models.CASCADE, related_name='bookings',

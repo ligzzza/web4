@@ -1,11 +1,15 @@
 {% extends 'main/admin_base.html' %}
 
-{% block title %}Главная панель{% endblock %}
+{% block title %}Панель управления{% endblock %}
+{% block page_title %}Панель управления{% endblock %}
 
 {% block content %}
-<h1 style="font-size: 1.8rem; margin-bottom: 2rem;">Здравствуйте, {{ user.first_name|default:user.username }}!</h1>
-
-<!-- Статистика -->
+<!-- Приветствие -->
+<div class="welcome-section">
+    <h2>Добро пожаловать в админ-панель, {{ user.first_name|default:user.username }}!</h2>
+    <p>Здесь вы можете управлять контентом и модерировать мастер-классы</p>
+</div>
+<!-- Статистика (4 квадрата) -->
 <div class="stats-grid">
     <div class="stat-card">
         <h3>{{ pending_masterclasses }}</h3>
@@ -25,43 +29,151 @@
     </div>
 </div>
 
-<!-- Быстрые действия -->
-<h2 style="font-size: 1.3rem; margin: 1.5rem 0 1rem;">Быстрые действия</h2>
-<div class="admin-menu-grid">
-    <a href="{% url 'admin_masterclasses' %}" class="admin-menu-card">
-        <div class="menu-icon">📋</div>
-        <div class="menu-info">
-            <h3>Модерация мастер-классов</h3>
-            <p>Проверка и публикация</p>
+<!-- Недавние разделы -->
+<div class="recent-section">
+    <div class="recent-header">
+        <span class="recent-icon"></span>
+        <h3>Недавние разделы</h3>
+    </div>
+
+    {% if history %}
+        <div class="recent-list">
+            {% for item in history %}
+            <a href="{{ item.url }}" class="recent-card">
+                <span class="recent-number">{{ forloop.counter }}.</span>
+                <span class="recent-name">{{ item.name }}</span>
+            </a>
+            {% endfor %}
         </div>
-    </a>
-    <a href="{% url 'admin_reviews' %}" class="admin-menu-card">
-        <div class="menu-icon">⭐</div>
-        <div class="menu-info">
-            <h3>Модерация отзывов</h3>
-            <p>Одобрение и удаление</p>
-        </div>
-    </a>
-    <a href="{% url 'admin_users' %}" class="admin-menu-card">
-        <div class="menu-icon">👥</div>
-        <div class="menu-info">
-            <h3>Управление пользователями</h3>
-            <p>Блокировка, роли</p>
-        </div>
-    </a>
-    <a href="{% url 'admin_categories' %}" class="admin-menu-card">
-        <div class="menu-icon">📂</div>
-        <div class="menu-info">
-            <h3>Управление категориями</h3>
-            <p>Добавление, удаление</p>
-        </div>
-    </a>
-    <a href="{% url 'admin_bookings_history' %}" class="admin-menu-card">
-        <div class="menu-icon">📅</div>
-        <div class="menu-info">
-            <h3>История бронирований</h3>
-            <p>Все записи и выручка</p>
-        </div>
-    </a>
+    {% else %}
+        <p class="empty-history">Пока нет истории</p>
+    {% endif %}
 </div>
+
+<style>
+    .welcome-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .welcome-section h2 {
+        font-size: 1.5rem;
+        color: var(--dark-text);
+        margin-bottom: 0.3rem;
+    }
+
+    .welcome-section p {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        text-align: center;
+        border: 1px solid var(--soft-pink);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    .stat-card h3 {
+        font-size: 2rem;
+        color: var(--accent-pink);
+        margin-bottom: 0.3rem;
+    }
+    .stat-card p {
+        color: #888;
+        font-size: 0.85rem;
+    }
+    /* Недавние разделы — узкий блок по центру */
+    .recent-section {
+        background: white;
+        border-radius: 20px;
+        padding: 1.2rem;
+        border: 1px solid var(--soft-pink);
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    .recent-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .recent-header .recent-icon {
+        font-size: 1.3rem;
+    }
+    .recent-header h3 {
+        font-size: 1.1rem;
+        color: var(--accent-pink);
+        margin: 0;
+    }
+    .recent-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .recent-card {
+        background: var(--light-gray);
+        border-radius: 40px;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: var(--dark-text);
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        transition: all 0.3s;
+    }
+    .recent-card:hover {
+        background: var(--soft-pink);
+        transform: translateX(5px);
+    }
+    .recent-number {
+        font-weight: 600;
+        color: var(--accent-pink);
+        width: 24px;
+        font-size: 0.85rem;
+    }
+    .recent-name {
+        flex: 1;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    .recent-arrow {
+        color: #aaa;
+        transition: transform 0.2s;
+    }
+    .recent-card:hover .recent-arrow {
+        transform: translateX(3px);
+        color: var(--accent-pink);
+    }
+    .empty-history {
+        text-align: center;
+        padding: 1rem;
+        color: #aaa;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        .recent-section {
+            max-width: 100%;
+        }
+        .welcome-section h2 {
+            font-size: 1.2rem;
+        }
+    }
+</style>
 {% endblock %}

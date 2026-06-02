@@ -1,0 +1,67 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Мастер-классы организатора — {{ organizer.get_full_name|default:organizer.username }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem;margin-top: 2rem;">
+    <div style="margin-bottom: 2rem;">
+        <a href="{% url 'home' %}" style="color: var(--accent-pink); text-decoration: none;">← Назад</a>
+    </div>
+
+    <!-- Информация об организаторе -->
+    <div class="organizer-header" style="display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; background: white; border-radius: 24px; padding: 1.5rem; border: 1px solid var(--soft-pink);">
+        <div>
+            {% if organizer.avatar %}
+                <img src="{{ organizer.avatar.url }}" alt="{{ organizer.get_full_name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
+            {% else %}
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 3rem;">🎨</div>
+            {% endif %}
+        </div>
+        <div>
+            <h1 style="margin-bottom: 0.3rem;">{{ organizer.get_full_name|default:organizer.username }}</h1>
+            {% if organizer.organization_name %}
+                <p style="color: var(--accent-pink); font-weight: 500; margin-bottom: 0.3rem;">{{ organizer.organization_name }}</p>
+            {% endif %}
+            <p style="color: #888;">{{ masterclasses|length }} мастер-классов</p>
+        </div>
+    </div>
+
+    <!-- Список мастер-классов -->
+    <h2 style="margin-bottom: 1.5rem;">Мастер-классы организатора</h2>
+
+    {% if masterclasses %}
+        <div class="masterclasses-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+            {% for mc in masterclasses %}
+            <div class="masterclass-card" style="background: white; border-radius: 20px; overflow: hidden; border: 1px solid var(--soft-pink); transition: transform 0.3s;">
+                <a href="{% url 'masterclass_detail' mc.id %}" style="text-decoration: none; color: inherit;">
+                    {% with mc.images.filter.is_main.first|default:mc.images.first as main_image %}
+                        {% if main_image %}
+                            <img src="{{ main_image.image.url }}" alt="{{ mc.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 3rem;">📷</div>
+                        {% endif %}
+                    {% endwith %}
+                    <div style="padding: 1rem;">
+                        <h3 style="margin-bottom: 0.3rem; font-size: 1.1rem;">{{ mc.title }}</h3>
+                        <p style="color: #888; font-size: 0.85rem;">📍 {{ mc.city }} • {{ mc.get_format_display }}</p>
+                        <p style="color: var(--accent-pink); font-weight: bold; margin-top: 0.5rem;">{{ mc.price }} ₽</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state" style="text-align: center; padding: 3rem; background: white; border-radius: 20px; border: 1px solid var(--soft-pink);">
+            <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+            <p style="color: #888;">У этого организатора пока нет мастер-классов</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .masterclass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+</style>
+{% endblock %}

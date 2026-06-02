@@ -21,8 +21,8 @@
                         <strong>{{ booking.participant.first_name }} {{ booking.participant.last_name }}</strong>
                         <span class="badge-places">{{ booking.participants_count }} мест</span>
                         <div class="participant-details">
-                            📧 {{ booking.participant.email }}<br>
-                            📞 {{ booking.participant.phone|default:"Телефон не указан" }}
+                            Почта:  {{ booking.participant.email }}<br>
+                            Телефон:  {{ booking.participant.phone|default:"Телефон не указан" }}
                         </div>
                     </div>
                 </div>

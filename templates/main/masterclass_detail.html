@@ -11,11 +11,35 @@
 
     <!-- Основная информация -->
     <div class="card" style="margin-top: 1rem;">
-        <!-- Изображение -->
-        {% with masterclass.images.first as main_image %}
-            {% if main_image %}
-                <img src="{{ main_image.image.url }}" alt="{{ masterclass.title }}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 16px; margin-bottom: 1.5rem;">
+        <!-- Галерея изображений -->
+        {% with masterclass.images.all as all_images %}
+            {% if all_images %}
+                {% comment %} Сортируем фото: сначала те, где is_main=True, потом остальные {% endcomment %}
+                {% with all_images|dictsortreversed:"is_main" as images %}
+                    <div class="gallery-container">
+                        <!-- Главное изображение (первое фото после сортировки) -->
+                        <div class="main-image">
+                            {% with images.0 as main_image %}
+                                <img id="mainImage" src="{{ main_image.image.url }}" alt="{{ masterclass.title }}" style="width: 100%; max-height: 400px; object-fit: cover; border-radius: 16px; cursor: pointer;">
+                            {% endwith %}
+                        </div>
+
+                        <!-- Миниатюры -->
+                        {% if images|length > 1 %}
+                            <div class="thumbnail-list" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                                {% for img in images %}
+                                    <img src="{{ img.image.url }}"
+                                         alt="Фото {{ forloop.counter }}"
+                                         class="thumbnail {% if forloop.first %}active-thumbnail{% endif %}"
+                                         onclick="changeImage('{{ img.image.url }}', this)"
+                                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid {% if forloop.first %}var(--accent-pink){% else %}transparent{% endif %};">
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
             {% else %}
+                <!-- Заглушка, если нет фото -->
                 <div style="width: 100%; height: 300px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); border-radius: 16px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
                     📷 Мастер-класс
                 </div>
@@ -50,37 +74,46 @@
             <p style="line-height: 1.6;">{{ masterclass.description }}</p>
         </div>
 
-        <!-- Сеансы -->
-        <div class="card" style="margin-top: 2rem;">
-            <h3>📅 Доступные сеансы</h3>
-            {% if sessions %}
-                <div class="sessions-list">
-                    {% for session in sessions %}
-                    <div class="session-card">
+ <!-- Сеансы -->
+        {% if sessions %}
+        <div class="sessions-section">
+            <div class="sessions-header">
+                <h3>Доступные сеансы</h3>
+                {% if show_more_button %}
+                    <a href="{% url 'masterclass_sessions' masterclass.id %}" class="show-all-link">Все сеансы →</a>
+                {% endif %}
+            </div>
+            <div class="sessions-list">
+                {% for session in sessions %}
+                <div class="session-card">
+                    <div class="session-info">
                         <div class="session-date">
                             {{ session.start_datetime|date:"d.m.Y H:i" }} — {{ session.end_datetime|date:"H:i" }}
                         </div>
-                        <div class="session-info">
-                            👥 {{ session.free_places }}/{{ session.max_participants }} мест
+                        <div class="session-places">
+                            Свободных мест: {{ session.free_places }} из {{ session.max_participants }}
                         </div>
-                        {% if user.is_authenticated and user.role == 'participant' %}
-                            {% if session.has_free_places %}
-                                <a href="{% url 'booking_session' session.id %}" class="btn-small">Записаться</a>
-                            {% else %}
-                                <button class="btn-small" disabled style="background: #ccc;">❌ Мест нет</button>
-                            {% endif %}
-                        {% endif %}
-                        <!-- Кнопка для организатора -->
-                        {% if user == masterclass.organizer or user.is_admin %}
-                            <a href="{% url 'session_participants' session.id %}" class="btn-small" style="background: var(--soft-blue); color: var(--dark-text);">Участники</a>
+                        {% if session.meeting_link %}
+                            <div class="session-online">Онлайн-трансляция</div>
                         {% endif %}
                     </div>
-                    {% endfor %}
+                    <div class="session-actions">
+                        {% if user.is_authenticated and user.role == 'participant' %}
+                            {% if session.has_free_places %}
+                                <a href="{% url 'booking_session' session.id %}" class="btn-session">Записаться</a>
+                            {% else %}
+                                <button class="btn-session disabled" disabled>❌ Мест нет</button>
+                            {% endif %}
+                        {% endif %}
+                        {% if user == masterclass.organizer or user.is_admin %}
+                            <a href="{% url 'session_participants' session.id %}" class="btn-session btn-outline">Участники</a>
+                        {% endif %}
+                    </div>
                 </div>
-            {% else %}
-                <p>Нет доступных сеансов</p>
-            {% endif %}
+                {% endfor %}
+            </div>
         </div>
+        {% endif %}
 
         <!-- Кнопки действий -->
         <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; align-items: center;">
@@ -106,7 +139,7 @@
 
     <!-- Отзывы -->
     <div class="card" style="margin-top: 2rem;">
-        <h3>⭐ Отзывы ({{ reviews_count }})</h3>
+        <h3>Отзывы ({{ reviews_count }})</h3>
 
         {% if reviews %}
             {% for review in reviews %}
@@ -128,8 +161,8 @@
                     <!-- Кнопки редактирования/удаления (только для автора) -->
                     {% if user.is_authenticated and user == review.author %}
                     <div style="display: flex; gap: 0.5rem;">
-                        <button onclick="showEditForm({{ review.id }}, {{ review.rating }}, `{{ review.text|escapejs }}`)" class="btn-small" style="background: var(--soft-blue);">✏️ Редактировать</button>
-                        <a href="{% url 'delete_review' review.id %}" class="btn-small" style="background: #e74c3c; color: white;" onclick="return confirm('Удалить отзыв?')">🗑️ Удалить</a>
+                        <button onclick="showEditForm({{ review.id }}, {{ review.rating }}, `{{ review.text|escapejs }}`)" class="review-edit-btn">Редактировать</button>
+                        <a href="{% url 'delete_review' review.id %}" class="review-delete-btn" onclick="return confirm('Удалить отзыв?')">Удалить</a>
                     </div>
                     {% endif %}
                 </div>
@@ -189,6 +222,52 @@
             <button type="submit" class="btn">Отправить отзыв</button>
         </form>
     </div>
+    {% endif %}
+
+    <!-- Похожие мастер-классы -->
+    {% if similar_masterclasses and not can_edit %}
+    <div class="similar-section" style="margin-top: 3rem; background: #e8e0d8; border-radius: 32px; padding: 2rem 1.5rem; box-shadow: inset 0 1px 4px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.03);">
+        <div style="text-align: center; margin-bottom: 1.8rem;">
+            <div style="display: inline-block; background: var(--accent-pink); width: 40px; height: 3px; border-radius: 3px; margin-bottom: 1rem;"></div>
+            <h3 style="color: var(--dark-text); font-size: 1.8rem; margin-bottom: 0.3rem; letter-spacing: -0.3px;">Вам может понравиться</h3>
+        </div>
+
+        <div class="similar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+            {% for similar in similar_masterclasses %}
+            <div class="similar-card" style="background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 14px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.05);">
+                <a href="{% url 'masterclass_detail' similar.id %}" style="text-decoration: none; color: inherit;">
+                    {% with similar.images.first as img %}
+                        {% if img %}
+                            <img src="{{ img.image.url }}" alt="{{ similar.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">🎨</div>
+                        {% endif %}
+                    {% endwith %}
+                    <div style="padding: 1rem 1.2rem 1.2rem;">
+                        <h4 style="margin: 0 0 0.4rem 0; font-size: 1.1rem; font-weight: 600; color: var(--dark-text); line-height: 1.3;">{{ similar.title|truncatechars:45 }}</h4>
+                        <p style="color: #8a7a6e; font-size: 0.8rem; margin: 0 0 0.3rem 0; text-transform: uppercase; letter-spacing: 0.3px;">{{ similar.category.name }}</p>
+                        <p style="color: #7a6a5e; font-size: 0.9rem; margin: 0 0 0.8rem 0;">📍 {{ similar.city }}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <span style="color: var(--accent-pink); font-weight: 700; font-size: 1.2rem;">{{ similar.price }} ₽</span>
+                            <span style="background: var(--accent-pink); color: white; padding: 0.4rem 1rem; border-radius: 40px; font-size: 0.75rem; font-weight: 500; transition: all 0.2s;">Подробнее</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <style>
+        .similar-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 28px rgba(0,0,0,0.12);
+        }
+
+        .similar-card:hover .similar-card span:last-child {
+            background: var(--dark-text);
+        }
+    </style>
     {% endif %}
 
 </div>
@@ -264,9 +343,81 @@
         reviewText.style.display = 'block';
         reviewStars.style.display = 'inline';
     }
+    // Функция для смены главного изображения при клике на миниатюру
+    function changeImage(imageUrl, thumbnailElement) {
+        const mainImage = document.getElementById('mainImage');
+        if (mainImage) {
+            mainImage.src = imageUrl;
+
+            // Обновляем активную миниатюру
+            const allThumbnails = document.querySelectorAll('.thumbnail');
+            allThumbnails.forEach(thumb => {
+                thumb.style.borderColor = 'transparent';
+            });
+            thumbnailElement.style.borderColor = 'var(--accent-pink)';
+        }
+    }
+    // Добавить функцию открытия фото в полный размер
+    document.getElementById('mainImage')?.addEventListener('click', function() {
+        window.open(this.src, '_blank');
+    });
 </script>
 
 <style>
+    /* Галерея */
+    .gallery-container {
+        margin-bottom: 2rem;
+    }
+
+    .main-image {
+        width: 100%;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .main-image img {
+        width: 100%;
+        height: auto;
+        min-height: 450px;
+        max-height: 550px;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.4s ease;
+    }
+
+    .main-image img:hover {
+        transform: scale(1.02);
+    }
+
+    /* Миниатюры */
+    .thumbnail-list {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .thumbnail {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 3px solid transparent;
+    }
+
+    .thumbnail:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .active-thumbnail {
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 2px var(--soft-pink);
+    }
     .favorite-btn {
         transition: transform 0.2s ease;
     }
@@ -276,48 +427,159 @@
     .favorite-btn:active {
         transform: scale(0.95);
     }
-    .btn-small {
-        font-family: 'Jost', sans-serif;
-        font-weight: 500;
-        font-size: 0.85rem;
-        padding: 0.4rem 1rem;
-        border-radius: 30px;
-        text-decoration: none;
-        display: inline-block;
-        cursor: pointer;
-        border: none;
-    }
     .review-item {
         transition: all 0.2s;
     }
+    /* Сеансы — чёткий, контрастный стиль */
+    .sessions-section {
+        margin-top: 2rem;
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .sessions-section h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        color: var(--dark-text);
+    }
+
     .sessions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
     }
 
     .session-card {
+        background: #fafafa;
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        border: 1px solid var(--soft-pink);
-        border-radius: 12px;
         flex-wrap: wrap;
         gap: 1rem;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+
+    .session-card:hover {
+        border-color: #aaa;
+        background: white;
     }
 
     .session-date {
-        font-weight: bold;
-        color: var(--accent-pink);
-        min-width: 180px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.3rem;
     }
 
-    .session-info {
+    .session-places {
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .session-online {
+        font-size: 0.8rem;
+        color: #777;
+        margin-top: 0.3rem;
+    }
+
+    .session-actions {
         display: flex;
-        gap: 1rem;
-        color: #666;
-        flex: 1;
+        gap: 0.8rem;
+    }
+
+    .btn-session {
+        display: inline-block;
+        padding: 0.5rem 1.2rem;
+        background: #d48a9e;
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-session:hover {
+        background: #bc6f8c;
+        transform: translateY(-2px);
+    }
+
+    .btn-session.disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-session.btn-outline {
+        background: transparent;
+        border: 1px solid #ccc;
+        color: #555;
+    }
+
+    .btn-session.btn-outline:hover {
+        background: #f0f0f0;
+        border-color: #aaa;
+    }
+    .sessions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .show-all-link {
+        color: var(--accent-pink);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+
+    .show-all-link:hover {
+        text-decoration: underline;
+        color: #d48a9e;
+    }
+    /* Кнопки для отзывов */
+    .review-edit-btn,
+    .review-delete-btn {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'Jost', sans-serif;
+        border: none;
+    }
+
+    .review-edit-btn {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .review-edit-btn:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .review-delete-btn {
+        background: transparent;
+        border: 1px solid #d48a9e;
+        color: #d48a9e;
+    }
+
+    .review-delete-btn:hover {
+        background: #d48a9e;
+        color: white;
+        transform: translateY(-2px);
     }
 </style>
 {% endblock %}

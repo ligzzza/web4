@@ -84,7 +84,7 @@
                             <span>⭐ {{ mc.avg_rating|floatformat:1 }}</span>
                             <span>{{ mc.reviews_count }} отзывов</span>
                         </div>
-                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее →</a>
+                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -115,10 +115,10 @@
                         <h3>{{ mc.title }}</h3>
                         <p class="popular-city">📍 {{ mc.city }}</p>
                         <div class="popular-stats">
-                            <span>👥 {{ mc.current_participants }}/{{ mc.max_participants }}</span>
+                            <span>👥 {{ mc.total_participants|default:0 }}/{{ mc.total_max_participants|default:0 }}</span>
                             <span>💰 {{ mc.price }} ₽</span>
                         </div>
-                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее →</a>
+                        <a href="{% url 'masterclass_detail' mc.id %}" class="btn-small">Подробнее</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -127,7 +127,274 @@
             <p class="empty-message">Пока нет популярных мастер-классов</p>
         {% endif %}
     </div>
+    <!-- Рейтинг организаторов -->
+    <div class="section">
+        <h2>Рейтинг организаторов</h2>
 
+        {% if top_organizers %}
+            <div class="organizers-rankings">
+                {% for org in top_organizers %}
+                <div class="organizer-card rank-{{ org.rank }}">
+                    <div class="rank-badge">
+                        {% if org.rank == 1 %}🥇
+                        {% elif org.rank == 2 %}🥈
+                        {% elif org.rank == 3 %}🥉
+                        {% endif %}
+                    </div>
+                    <div class="organizer-avatar">
+                        {% if org.avatar %}
+                            <img src="{{ org.avatar.url }}" alt="{{ org.get_full_name }}">
+                        {% else %}
+                            <div class="organizer-avatar-placeholder">
+                                {% if org.rank == 1 %}👑
+                                {% elif org.rank == 2 %}⭐
+                                {% else %}🎨
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="organizer-info">
+                        <h3>{{ org.get_full_name|default:org.username }}</h3>
+                        {% if org.organization_name %}
+                            <p class="organizer-studio">{{ org.organization_name }}</p>
+                        {% endif %}
+                        <div class="organizer-rating">
+                            <div class="stars-container">
+                                <div class="stars-back">★★★★★</div>
+                                <div class="stars-front" style="width: {% widthratio org.avg_rating 5 100 %}%;">★★★★★</div>
+                            </div>
+                            <span class="rating-value">{{ org.avg_rating|floatformat:1 }}</span>
+                            <span class="rating-reviews">{{ org.reviews_count }} отзывов</span>
+                        </div>
+                        <a href="{% url 'organizer_masterclasses' org.id %}" class="btn-ranking">Мастер-классы</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-ranking">
+                <p>Пока нет организаторов с рейтингом выше 4.5</p>
+                <p class="small">Ставьте отзывы на мастер-классы, чтобы появились первые лидеры!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .organizers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .organizer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border: 1px solid var(--soft-pink);
+            transition: transform 0.3s;
+        }
+
+        .organizer-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .organizer-avatar img,
+        .organizer-avatar-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .organizer-info {
+            flex: 1;
+        }
+
+        .organizer-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .organizer-studio {
+            font-size: 0.7rem;
+            color: var(--accent-pink);
+            margin-bottom: 0.3rem;
+        }
+
+        .organizer-rating {
+            display: flex;
+            gap: 0.8rem;
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-stars {
+            color: #f5a623;
+        }
+        /* Рейтинг организаторов */
+        .organizers-rankings {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .organizer-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1rem 1.5rem 1rem 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border: 2px solid var(--soft-pink);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .organizer-card.rank-1 {
+            background: linear-gradient(135deg, #fff8e7, white);
+            border-color: #ffd700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .organizer-card.rank-2 {
+            background: linear-gradient(135deg, #f5f5f5, white);
+            border-color: #c0c0c0;
+        }
+
+        .organizer-card.rank-3 {
+            background: linear-gradient(135deg, #fff5eb, white);
+            border-color: #cd7f32;
+        }
+
+        .organizer-card:hover {
+            transform: translateX(5px);
+        }
+
+        .rank-badge {
+            font-size: 2.5rem;
+            margin-right: 0.3rem;
+        }
+
+        .organizer-avatar img,
+        .organizer-avatar-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .organizer-avatar-placeholder {
+            background: linear-gradient(135deg, #ffd700, #ffec80);
+        }
+
+        .organizer-info {
+            flex: 1;
+        }
+
+        .organizer-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .organizer-studio {
+            font-size: 0.75rem;
+            color: var(--accent-pink);
+            margin-bottom: 0.3rem;
+        }
+
+        .organizer-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-stars {
+            color: #f5a623;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+        }
+
+        .rating-value {
+            font-weight: bold;
+            color: var(--accent-pink);
+            font-size: 1rem;
+        }
+
+        .rating-reviews {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .btn-ranking {
+            display: inline-block;
+            background: transparent;
+            border: 1px solid var(--soft-pink);
+            color: var(--dark-text);
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-ranking:hover {
+            background: var(--soft-pink);
+        }
+
+        .empty-ranking {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--soft-pink);
+        }
+
+        .empty-ranking .small {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.3rem;
+        }
+        .stars-container {
+            position: relative;
+            display: inline-block;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #ddd;
+        }
+
+        .stars-back {
+            color: #e0e0e0;
+        }
+
+        .stars-front {
+            position: absolute;
+            top: 0;
+            left: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            color: #f5a623;
+        }
+    </style>
     <!-- Категории -->
     <div class="section">
         <h2>Категории</h2>
@@ -137,13 +404,13 @@
                 {% for cat in categories %}
                 <a href="{% url 'catalog' %}?category={{ cat.id }}" class="category-card">
                     <div class="category-icon">
-                        {% if cat.name == 'Кулинария' %}🍳
-                        {% elif cat.name == 'Творчество' %}🎨
-                        {% elif cat.name == 'Рукоделие' %}🧵
-                        {% elif cat.name == 'Танцы' %}💃
-                        {% elif cat.name == 'Музыка' %}🎵
-                        {% elif cat.name == 'Спорт' %}🏃
-                        {% else %}📚
+                        {% if cat.name == 'Кулинария' %}
+                        {% elif cat.name == 'Творчество' %}
+                        {% elif cat.name == 'Рукоделие' %}
+                        {% elif cat.name == 'Танцы' %}
+                        {% elif cat.name == 'Музыка' %}
+                        {% elif cat.name == 'Спорт' %}
+                        {% else %}
                         {% endif %}
                     </div>
                     <span>{{ cat.name }}</span>

@@ -1,0 +1,85 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Возврат билетов — MasterGrad{% endblock %}
+
+{% block content %}
+<div class="refund-page" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--dark-text);">Возврат билетов</h1>
+    <p style="color: #666; margin-bottom: 2rem;">Условия и порядок возврата денежных средств</p>
+
+    <div class="refund-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="refund-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Полный возврат</div>
+            <p style="margin: 0; font-size: 0.9rem;">При отмене за 24+ часа до начала возвращается полная стоимость билета.</p>
+        </div>
+        <div class="refund-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Без возврата</div>
+            <p style="margin: 0; font-size: 0.9rem;">При отмене менее чем за 24 часа или неявке деньги не возвращаются.</p>
+        </div>
+        <div class="refund-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Отмена организатором</div>
+            <p style="margin: 0; font-size: 0.9rem;">Если мастер-класс отменён, вы получаете полный возврат автоматически.</p>
+        </div>
+        <div class="refund-card" style="background: #f8f8f8; border-radius: 16px; padding: 1.2rem;">
+            <div style="font-weight: 600; color: var(--accent-pink); margin-bottom: 0.5rem;">Срок зачисления</div>
+            <p style="margin: 0; font-size: 0.9rem;">3-5 рабочих дней с момента отмены бронирования.</p>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.2rem;">Как получить возврат</h3>
+                <div style="margin-bottom: 0.8rem;">
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">1. Отмените бронирование</div>
+                    <p style="font-size: 0.9rem; color: #666;">Через личный кабинет в разделе "Мои бронирования".</p>
+                </div>
+                <div style="margin-bottom: 0.8rem;">
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">2. Ожидайте обработки</div>
+                    <p style="font-size: 0.9rem; color: #666;">Запрос обрабатывается автоматически.</p>
+                </div>
+                <div>
+                    <div style="font-weight: 500; margin-bottom: 0.3rem;">3. Получите подтверждение</div>
+                    <p style="font-size: 0.9rem; color: #666;">Письмо с уведомлением придёт на вашу почту.</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.2rem;">Что важно знать</h3>
+                <ul style="margin-left: 1rem; line-height: 1.8; color: #555;">
+                    <li>Возврат происходит на ту же карту, с которой была оплата</li>
+                    <li>Комиссия платёжной системы не удерживается</li>
+                    <li>При двойном списании обратитесь в поддержку</li>
+                    <li>Срок зачисления зависит от вашего банка</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem;">
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 1rem; font-size: 1.2rem;">Когда возврат не положен</h3>
+                <ul style="margin-left: 1rem; line-height: 1.8; color: #555;">
+                    <li>Отмена менее чем за 24 часа до начала</li>
+                    <li>Неявка на мастер-класс без предупреждения</li>
+                    <li>Бронирование уже было использовано</li>
+                    <li>Нарушение правил платформы</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+            <div class="card" style="height: 100%; background: #f9f9f9;">
+                <h3 style="color: var(--accent-pink); margin-bottom: 0.8rem; font-size: 1rem;">Не пришли деньги?</h3>
+                <p style="margin-bottom: 0.5rem;">Если прошло более 7 рабочих дней, свяжитесь с нами:</p>
+                <p><strong>+7 (965) 112-46-76</strong></p>
+                <p><strong>galova.liza06@gmail.com</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}О проекте — MasterGrad{% endblock %}
+
+{% block content %}
+<div class="about-page" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1 style="font-size: 2.2rem; margin-bottom: 1rem; color: var(--dark-text);">О проекте MasterGrad</h1>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">Наша миссия</h3>
+        <p style="line-height: 1.6;">Сделать творческое развитие и обучение новым навыкам доступным для каждого человека в любом городе России. Мы верим, что вдохновение и талант есть у каждого, а правильно подобранный мастер-класс может открыть новую страницу в жизни.</p>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">Что мы предлагаем</h3>
+        <p style="line-height: 1.6;">MasterGrad — это платформа, которая объединяет лучших организаторов мастер-классов по всей России. У нас вы найдёте занятия по кулинарии, живописи, танцам, гончарному делу, вокалу, фотографии и многим другим направлениям.</p>
+        <ul style="margin-top: 1rem; margin-left: 1.5rem; line-height: 1.8;">
+            <li>Более 1000 мастер-классов в 50+ городах</li>
+            <li>Проверенные организаторы с реальными отзывами</li>
+            <li>Удобный поиск с фильтрацией по дате, цене и городу</li>
+            <li>Безопасная онлайн-оплата</li>
+            <li>Моментальное подтверждение бронирования</li>
+        </ul>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">Для организаторов</h3>
+        <p style="line-height: 1.6;">Вы — организатор мастер-классов? Присоединяйтесь к нам! Мы предоставляем удобную платформу для размещения ваших мероприятий, управления расписанием и приёма бронирований.</p>
+        <p style="margin-top: 0.5rem;"><strong>Преимущества для организаторов:</strong></p>
+        <ul style="margin-top: 0.5rem; margin-left: 1.5rem; line-height: 1.8;">
+            <li>Бесплатное размещение мастер-классов</li>
+            <li>Доступ к аудитории по всей России</li>
+            <li>Удобная панель управления бронированиями</li>
+            <li>Автоматические уведомления участникам</li>
+            <li>Поддержка онлайн-трансляций через Zoom, Яндекс.Телемост</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3 style="color: var(--accent-pink); margin-bottom: 1rem;">Контакты</h3>
+        <p><strong>Телефон:</strong> <a href="tel:+79651124676" style="color: var(--accent-pink);">+7 (965) 112-46-76</a></p>
+        <p><strong>Email:</strong> <a href="mailto:galova.liza06@gmail.com" style="color: var(--accent-pink);">galova.liza06@gmail.com</a></p>
+        <p><strong>Часы работы:</strong> Пн–Пт: 10:00 – 19:00</p>
+    </div>
+</div>
+{% endblock %}

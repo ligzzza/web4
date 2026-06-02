@@ -3,37 +3,36 @@
 {% block title %}Профиль администратора{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 800px;">
+<div class="container" style="max-width: 700px;">
     <div style="text-align: center; margin-bottom: 2rem;">
         <h2 style="font-size: 2rem; color: var(--dark-text);">Профиль администратора</h2>
-        <p style="color: #666;">Добро пожаловать, {{ user.first_name|default:user.username }}!</p>
+        <p style="color: #666;">Управление вашим аккаунтом</p>
     </div>
 
-    <div class="info-card">
+    <div class="card" style="margin-bottom: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="color: var(--accent-pink); margin: 0;">👤 Информация</h3>
-            <button id="editProfileBtn" class="btn-edit-profile">Редактировать</button>
+            <h3 style="color: var(--accent-pink); margin: 0;">Личная информация</h3>
+            <button id="editProfileBtn" class="btn-small">Редактировать</button>
         </div>
 
         <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
-            {% if user.avatar %}
-                <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
-            {% else %}
-                <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-                    👑
-                </div>
-            {% endif %}
+            <div style="text-align: center;">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="Аватар" id="profileAvatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">
+                {% else %}
+                    <div id="profileAvatar" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue)); display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid var(--accent-pink);">
+                        👑
+                    </div>
+                {% endif %}
+            </div>
             <div style="flex: 1;">
                 <p><strong>Имя:</strong> <span id="display-first-name">{{ user.first_name|default:"Не указано" }}</span></p>
                 <p><strong>Фамилия:</strong> <span id="display-last-name">{{ user.last_name|default:"Не указано" }}</span></p>
                 <p><strong>Email:</strong> <span id="display-email">{{ user.email }}</span></p>
                 <p><strong>Телефон:</strong> <span id="display-phone">{{ user.phone|default:"Не указан" }}</span></p>
+                <p><strong>Роль:</strong> <span style="color: var(--accent-pink); font-weight: 500;">{{ user.get_role_display }}</span></p>
             </div>
         </div>
-    </div>
-
-    <div class="admin-links">
-        <a href="{% url 'admin_dashboard' %}" class="btn">Панель управления</a>
     </div>
 </div>
 
@@ -51,6 +50,32 @@
             <form id="editProfileForm" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
+                <div class="form-group avatar-group">
+                    <label>Фото профиля</label>
+
+                    <div class="current-avatar-preview">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" alt="Аватар" id="currentAvatar" class="avatar-preview-img">
+                        {% else %}
+                            <div id="currentAvatar" class="avatar-preview-placeholder">👑</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="file-upload-wrapper">
+                        <label for="avatar-upload" class="file-upload-label">
+                            <span class="upload-icon">📷</span>
+                            <span>Выбрать новое фото</span>
+                        </label>
+                        <input type="file" name="avatar" id="avatar-upload" accept="image/*" style="display: none;">
+                        <small class="upload-hint">JPG, PNG до 5MB</small>
+                    </div>
+
+                    <div id="newAvatarPreview" style="display: none; margin-top: 1rem;">
+                        <p style="font-size: 0.8rem; color: #888;">Новое фото:</p>
+                        <img id="newAvatarImg" class="avatar-preview-img">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Имя</label>
                     <input type="text" name="first_name" id="edit-first-name" value="{{ user.first_name|default:'' }}" placeholder="Ваше имя">
@@ -61,7 +86,7 @@
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" name="email" id="edit-email" value="{{ user.email }}" required>
+                    <input type="email" name="email" id="edit-email" value="{{ user.email }}" placeholder="example@mail.ru" required>
                 </div>
                 <div class="form-group">
                     <label>Телефон</label>
@@ -76,6 +101,241 @@
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid var(--soft-pink);
+    }
+
+    .btn-small {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.85rem;
+    }
+
+    .btn-outline {
+        display: inline-block;
+        background: transparent;
+        border: 2px solid var(--soft-blue);
+        color: var(--dark-text);
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        text-decoration: none;
+        font-family: 'Jost', sans-serif;
+        transition: all 0.3s;
+    }
+
+    .btn-outline:hover {
+        background: var(--soft-blue);
+    }
+
+    /* Модальное окно */
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 480px;
+        max-height: 85vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border: 1px solid var(--soft-pink);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem 0.5rem 2rem;
+        border-bottom: 1px solid var(--soft-pink);
+    }
+
+    .modal-header h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-pink);
+        margin: 0;
+    }
+
+    .close {
+        font-size: 1.8rem;
+        cursor: pointer;
+        color: #aaa;
+        transition: all 0.3s;
+    }
+
+    .close:hover {
+        color: var(--accent-pink);
+    }
+
+    .modal-inner {
+        padding: 0 2rem 2rem 2rem;
+    }
+
+    .message {
+        margin: 1rem 2rem 0 2rem;
+    }
+
+    .modal .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .modal .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--dark-text);
+        font-family: 'Jost', sans-serif;
+    }
+
+    .modal .form-group input {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+    }
+
+    .modal .form-group input:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.1);
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .modal-buttons button {
+        flex: 1;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        padding: 0.7rem;
+        border-radius: 30px;
+        cursor: pointer;
+    }
+
+    .modal-buttons button:first-child {
+        background: var(--accent-pink);
+        color: white;
+        border: none;
+    }
+
+    .modal-buttons button:first-child:hover {
+        background: #d48a9e;
+    }
+
+    .modal-buttons button:last-child {
+        background: transparent;
+        border: 2px solid var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .alert.success {
+        background: #d4edda;
+        color: #155724;
+        padding: 0.8rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .alert.error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.8rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    /* Аватар */
+    .avatar-group {
+        text-align: center;
+    }
+
+    .current-avatar-preview {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .avatar-preview-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-pink);
+    }
+
+    .avatar-preview-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--soft-pink), var(--soft-blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        border: 3px solid var(--accent-pink);
+    }
+
+    .file-upload-wrapper {
+        text-align: center;
+    }
+
+    .file-upload-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--soft-blue);
+        color: var(--dark-text);
+        padding: 0.5rem 1.2rem;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: 'Jost', sans-serif;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+
+    .file-upload-label:hover {
+        background: #a8d4c0;
+    }
+
+    .upload-hint {
+        display: block;
+        margin-top: 0.5rem;
+        color: #888;
+        font-size: 0.7rem;
+    }
+</style>
 
 <script>
     // Модальное окно
@@ -98,7 +358,8 @@
     function closeModal() {
         modal.style.display = 'none';
         document.body.classList.remove('modal-open');
-        document.getElementById('editMessage').innerHTML = '';
+        const msgDiv = document.getElementById('editMessage');
+        if (msgDiv) msgDiv.innerHTML = '';
     }
 
     if (closeSpan) closeSpan.onclick = closeModal;
@@ -108,6 +369,24 @@
         if (event.target == modal) {
             closeModal();
         }
+    }
+
+    // Предпросмотр нового аватара
+    const avatarInput = document.getElementById('avatar-upload');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const previewDiv = document.getElementById('newAvatarPreview');
+                    const previewImg = document.getElementById('newAvatarImg');
+                    previewImg.src = event.target.result;
+                    previewDiv.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
     }
 
     // Отправка формы через AJAX
@@ -135,13 +414,33 @@
                     document.getElementById('display-email').innerText = data.email;
                     document.getElementById('display-phone').innerText = data.phone || 'Не указан';
 
-                    document.getElementById('editMessage').innerHTML = '<div class="alert success">✅ Профиль обновлён!</div>';
+                    if (data.avatar_url) {
+                        const profileAvatar = document.getElementById('profileAvatar');
+                        const currentAvatar = document.getElementById('currentAvatar');
+
+                        if (profileAvatar) {
+                            if (profileAvatar.tagName === 'IMG') {
+                                profileAvatar.src = data.avatar_url + '?t=' + Date.now();
+                            } else {
+                                profileAvatar.outerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" id="profileAvatar" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-pink);">`;
+                            }
+                        }
+                        if (currentAvatar) {
+                            if (currentAvatar.tagName === 'IMG') {
+                                currentAvatar.src = data.avatar_url + '?t=' + Date.now();
+                            } else {
+                                currentAvatar.outerHTML = `<img src="${data.avatar_url}?t=${Date.now()}" alt="Аватар" id="currentAvatar" class="avatar-preview-img">`;
+                            }
+                        }
+                    }
+
+                    document.getElementById('editMessage').innerHTML = '<div class="alert success">✓ Профиль обновлён!</div>';
                     setTimeout(closeModal, 1500);
                 } else {
-                    document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+                    document.getElementById('editMessage').innerHTML = '<div class="alert error">✗ Ошибка при сохранении</div>';
                 }
             } catch (error) {
-                document.getElementById('editMessage').innerHTML = '<div class="alert error">❌ Ошибка при сохранении</div>';
+                document.getElementById('editMessage').innerHTML = '<div class="alert error">✗ Ошибка при сохранении</div>';
             }
         }
     }
@@ -161,170 +460,4 @@
         return cookieValue;
     }
 </script>
-
-<style>
-    .admin-links {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 1rem;
-    }
-
-    .btn-edit-profile {
-        display: inline-block;
-        padding: 0.4rem 1rem;
-        background: var(--soft-blue);
-        color: var(--dark-text);
-        border: none;
-        border-radius: 30px;
-        font-family: 'Jost', sans-serif;
-        font-weight: 500;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .btn-edit-profile:hover {
-        background: #a8d4c0;
-        transform: translateY(-2px);
-    }
-
-    /* Модальное окно */
-    body.modal-open {
-        overflow: hidden;
-    }
-
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        justify-content: center;
-        align-items: center;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 450px;
-        padding: 2rem;
-        position: relative;
-        border: 1px solid var(--soft-pink);
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.8rem;
-        border-bottom: 1px solid var(--soft-pink);
-    }
-
-    .modal-header h3 {
-        font-family: 'Jost', sans-serif;
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: var(--accent-pink);
-        margin: 0;
-    }
-
-    .close {
-        font-size: 1.8rem;
-        cursor: pointer;
-        color: #aaa;
-        transition: all 0.3s;
-    }
-
-    .close:hover {
-        color: var(--accent-pink);
-    }
-
-    .message {
-        margin-bottom: 1rem;
-    }
-
-    .modal .form-group {
-        margin-bottom: 1.2rem;
-    }
-
-    .modal .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--dark-text);
-        font-family: 'Jost', sans-serif;
-    }
-
-    .modal .form-group input {
-        width: 100%;
-        padding: 0.8rem 1rem;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        font-family: 'Jost', sans-serif;
-        font-size: 0.95rem;
-    }
-
-    .modal-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .modal-buttons button {
-        flex: 1;
-        font-family: 'Jost', sans-serif;
-        font-weight: 500;
-        padding: 0.8rem;
-        border-radius: 30px;
-        cursor: pointer;
-    }
-
-    .modal-buttons button:first-child {
-        background: var(--accent-pink);
-        color: white;
-        border: none;
-    }
-
-    .modal-buttons button:first-child:hover {
-        background: #d48a9e;
-    }
-
-    .modal-buttons button:last-child {
-        background: transparent;
-        border: 2px solid var(--soft-blue);
-        color: var(--dark-text);
-    }
-
-    .alert.success {
-        background: #d4edda;
-        color: #155724;
-        padding: 0.8rem;
-        border-radius: 12px;
-        text-align: center;
-        margin-top: 1rem;
-    }
-
-    .alert.error {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 0.8rem;
-        border-radius: 12px;
-        text-align: center;
-        margin-top: 1rem;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 20px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--soft-pink);
-    }
-</style>
 {% endblock %}
