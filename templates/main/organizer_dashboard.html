@@ -559,6 +559,63 @@
             align-items: flex-start;
         }
     }
+    /* ===== АДАПТАЦИЯ ПРОФИЛЯ ОРГАНИЗАТОРА ===== */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0.5rem !important;
+        }
+
+        .info-card, .bookings-card {
+            padding: 1rem !important;
+        }
+
+        .info-card h3, .bookings-card h3 {
+            font-size: 1.2rem !important;
+        }
+
+        .info-card > div:last-child {
+            flex-direction: column !important;
+            text-align: center !important;
+        }
+
+        .info-card > div:last-child > div:first-child {
+            text-align: center !important;
+        }
+
+        .booking-item {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+
+        .booking-item .btn-small {
+            align-self: flex-start !important;
+        }
+
+        .masterclass-stats {
+            justify-content: center !important;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+        }
+
+        .remove-session-btn {
+            width: 100% !important;
+            margin-top: 0.5rem !important;
+        }
+    }
+
+    /* Планшет */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .container {
+            max-width: 90% !important;
+        }
+
+        .booking-item {
+            flex-wrap: wrap !important;
+        }
+    }
 </style>
 
 <script>

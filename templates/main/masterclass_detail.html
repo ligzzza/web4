@@ -581,5 +581,229 @@
         color: white;
         transform: translateY(-2px);
     }
+        /* ===== АДАПТАЦИЯ ДЛЯ ПЛАНШЕТА (768px - 1024px) ===== */
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .container {
+            max-width: 95% !important;
+            padding: 1rem !important;
+        }
+
+        /* Галерея */
+        .main-image img {
+            max-height: 400px !important;
+            min-height: 300px !important;
+        }
+
+        .thumbnail {
+            width: 70px !important;
+            height: 70px !important;
+        }
+
+        /* Сеансы */
+        .session-card {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+        }
+
+        .session-info {
+            flex: 2 !important;
+        }
+
+        .session-actions {
+            flex: 1 !important;
+            justify-content: flex-end !important;
+        }
+
+        /* Похожие мастер-классы */
+        .similar-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1rem !important;
+        }
+
+        .similar-card h4 {
+            font-size: 0.9rem !important;
+        }
+
+        .similar-card p {
+            font-size: 0.7rem !important;
+        }
+    }
+
+    /* ===== АДАПТАЦИЯ ДЛЯ ТЕЛЕФОНА (до 768px) ===== */
+    @media (max-width: 768px) {
+        .container {
+            max-width: 100% !important;
+            padding: 0.5rem !important;
+        }
+
+        /* Хлебные крошки */
+        .container > a:first-child {
+            font-size: 0.8rem !important;
+        }
+
+        /* Галерея */
+        .main-image img {
+            max-height: 300px !important;
+            min-height: 250px !important;
+        }
+
+        .thumbnail-list {
+            justify-content: center !important;
+        }
+
+        .thumbnail {
+            width: 55px !important;
+            height: 55px !important;
+        }
+
+        /* Заголовок */
+        h1 {
+            font-size: 1.5rem !important;
+            text-align: center !important;
+        }
+
+        /* Рейтинг */
+        .container > .card > div:first-of-type {
+            justify-content: center !important;
+        }
+
+        /* Характеристики */
+        .card > div:first-of-type {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+        }
+
+        /* Описание */
+        h3 {
+            font-size: 1.2rem !important;
+        }
+
+        /* Сеансы */
+        .sessions-section {
+            padding: 1rem !important;
+        }
+
+        .sessions-header {
+            flex-direction: column !important;
+            gap: 0.5rem !important;
+            text-align: center !important;
+        }
+
+        .session-card {
+            flex-direction: column !important;
+            text-align: center !important;
+            padding: 0.8rem !important;
+        }
+
+        .session-info {
+            width: 100% !important;
+        }
+
+        .session-actions {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+
+        .session-date {
+            font-size: 0.9rem !important;
+        }
+
+        .session-places {
+            font-size: 0.8rem !important;
+        }
+
+        .btn-session {
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        /* Кнопки действий (избранное, редактировать, удалить) */
+        .card > div:last-child {
+            justify-content: center !important;
+            gap: 0.5rem !important;
+        }
+
+        .btn-edit, .btn-delete, .btn {
+            font-size: 0.75rem !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+
+        /* Отзывы */
+        .review-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+        }
+
+        .review-header > div:first-child {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            align-items: center !important;
+            gap: 0.3rem !important;
+        }
+
+        .review-header > div:last-child {
+            align-self: flex-end !important;
+        }
+
+        .review-text {
+            font-size: 0.85rem !important;
+        }
+
+        /* Похожие мастер-классы */
+        .similar-section {
+            padding: 1rem !important;
+            margin-top: 1.5rem !important;
+        }
+
+        .similar-section h3 {
+            font-size: 1.2rem !important;
+        }
+
+        .similar-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+
+        .similar-card h4 {
+            font-size: 0.85rem !important;
+        }
+
+        .similar-card p {
+            font-size: 0.7rem !important;
+        }
+    }
+
+    /* ===== МАЛЕНЬКИЕ ТЕЛЕФОНЫ (до 480px) ===== */
+    @media (max-width: 480px) {
+        .main-image img {
+            max-height: 220px !important;
+            min-height: 200px !important;
+        }
+
+        .thumbnail {
+            width: 45px !important;
+            height: 45px !important;
+        }
+
+        h1 {
+            font-size: 1.2rem !important;
+        }
+
+        .review-header > div:first-child {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+
+        .btn-small {
+            font-size: 0.65rem !important;
+            padding: 0.2rem 0.5rem !important;
+        }
+
+        .btn-session {
+            font-size: 0.75rem !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+    }
 </style>
 {% endblock %}

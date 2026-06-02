@@ -335,6 +335,42 @@
         color: #888;
         font-size: 0.7rem;
     }
+    /* ===== АДАПТАЦИЯ ПРОФИЛЯ АДМИНИСТРАТОРА ===== */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0.5rem !important;
+        }
+
+        .card {
+            padding: 1rem !important;
+        }
+
+        .card h3 {
+            font-size: 1.1rem !important;
+        }
+
+        .card > div:last-child {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+        }
+
+        .action-buttons {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+
+        .action-buttons .btn-outline {
+            text-align: center !important;
+        }
+    }
+
+    /* Планшет */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .container {
+            max-width: 90% !important;
+        }
+    }
 </style>
 
 <script>
