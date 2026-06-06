@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import MasterClass, Category, Booking, Review, Favorite, Notification, Session
+from .models import MasterClass, Category, Booking, Review, Favorite, Session
 
 User = get_user_model()
 

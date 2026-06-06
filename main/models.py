@@ -239,9 +239,23 @@ class Session(models.Model):
         ordering = ['start_datetime']
 
     def clean(self) -> None:
-        """Валидация: дата окончания должна быть позже даты начала."""
-        if self.end_datetime <= self.start_datetime:
-            raise ValidationError({'end_datetime': 'Дата окончания должна быть позже даты начала'})
+        def clean(self) -> None:
+            """Валидация: дата окончания позже даты начала."""
+            if self.end_datetime <= self.start_datetime:
+                raise ValidationError({'end_datetime': 'Дата окончания должна быть позже даты начала'})
+
+            # === НОВАЯ ПРОВЕРКА: пересечение с другими сеансами этого МК ===
+            overlapping = Session.objects.filter(
+                masterclass=self.masterclass,
+                start_datetime__lt=self.end_datetime,
+                end_datetime__gt=self.start_datetime
+            ).exclude(pk=self.pk)
+
+            if overlapping.exists():
+                raise ValidationError(
+                    'Этот сеанс пересекается с другим сеансом этого мастер-класса. '
+                    'Пожалуйста, выберите другое время.'
+                )
 
     def save(self, *args, **kwargs) -> None:
         """Сохраняет сеанс с предварительной валидацией."""
@@ -363,30 +377,3 @@ class Favorite(models.Model):
         """Возвращает строковое представление избранного."""
         return f"{self.user.get_full_name()} → {self.masterclass.title}"
 
-# 8. УВЕДОМЛЕНИЕ
-class Notification(models.Model):
-    """Уведомления пользователей"""
-
-    TYPE_CHOICES = [
-        ('booking_confirmed', 'Бронирование подтверждено'),
-        ('booking_cancelled', 'Бронирование отменено'),
-        ('moderation_result', 'Результат модерации'),
-        ('new_booking', 'Новое бронирование'),
-        ('reminder', 'Напоминание'),
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name="Пользователь")
-    type = models.CharField(max_length=30, choices=TYPE_CHOICES, verbose_name="Тип")
-    title = models.CharField(max_length=200, verbose_name="Заголовок")
-    message = models.TextField(verbose_name="Текст")
-    is_read = models.BooleanField(default=False, verbose_name="Прочитано")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-
-    class Meta:
-        verbose_name = "Уведомление"
-        verbose_name_plural = "Уведомления"
-        ordering = ['-created_at']
-
-    def __str__(self) -> str:
-        """Возвращает строковое представление уведомления."""
-        return f"{self.title} для {self.user.get_full_name()}"

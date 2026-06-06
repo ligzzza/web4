@@ -1191,45 +1191,41 @@
     </main>
 
     <footer class="footer">
-        <div class="footer-container">
-            <!-- Левая колонка (всегда первая) -->
-            <div class="footer-col footer-col-1">
+        <div class="footer-content">
+            <div class="footer-section">
                 <h3>Master<span>Grad</span></h3>
-                <p>Платформа для поиска и бронирования мастер-классов по всей России</p>
-
-                <div class="footer-nav">
-                    <h4>Навигация</h4>
-                    <ul>
-                        <li><a href="{% url 'catalog' %}">Каталог</a></li>
-                        {% if user.is_authenticated and user.role == 'organizer' %}
-                            <li><a href="{% url 'create_masterclass' %}">Создать мастер-класс</a></li>
-                        {% endif %}
-                        <li><a href="{% url 'favorites_list' %}">Избранное</a></li>
-                        <li><a href="{% url 'about' %}">О проекте</a></li>
-                        <li><a href="{% url 'faq' %}">Помощь</a></li>
-                    </ul>
-                </div>
+                <p>Платформа для поиска и бронирования<br>мастер-классов по всей России</p>
             </div>
 
-            <!-- Правая колонка (всегда вторая) -->
-            <div class="footer-col footer-col-2">
-                <div class="footer-users">
-                    <h4>Пользователям</h4>
-                    <ul>
-                        <li><a href="{% url 'how_to_book' %}">Как записаться</a></li>
-                        <li><a href="{% url 'cancellation_rules' %}">Правила отмены</a></li>
-                        <li><a href="{% url 'refund_policy' %}">Возврат билетов</a></li>
-                    </ul>
-                </div>
+            <div class="footer-section">
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="{% url 'catalog' %}">Каталог</a></li>
+                    {% if user.is_authenticated and user.role == 'organizer' %}
+                        <li><a href="{% url 'create_masterclass' %}">Создать мастер-класс</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'favorites_list' %}">Избранное</a></li>
+                    <li><a href="{% url 'about' %}">О проекте</a></li>
+                    <li><a href="{% url 'faq' %}">Помощь</a></li>
+                </ul>
+            </div>
 
-                <div class="footer-contacts">
-                    <h4>Контакты</h4>
-                    <ul class="contact-list">
-                        <li><a href="tel:+79651124676">+7 (965) 112-46-76</a></li>
-                        <li><a href="mailto:galova.liza06@gmail.com">galova.liza06@gmail.com</a></li>
-                        <li>Пн–Пт: 10:00 – 19:00</li>
-                    </ul>
-                </div>
+            <div class="footer-section">
+                <h4>Пользователям</h4>
+                <ul>
+                    <li><a href="{% url 'how_to_book' %}">Как записаться</a></li>
+                    <li><a href="{% url 'cancellation_rules' %}">Правила отмены</a></li>
+                    <li><a href="{% url 'refund_policy' %}">Возврат билетов</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Контакты</h4>
+                <ul class="contact-list">
+                    <li><a href="tel:+79651124676">+7 (965) 112-46-76</a></li>
+                    <li><a href="mailto:galova.liza06@gmail.com">galova.liza06@gmail.com</a></li>
+                    <li>Пн–Пт: 10:00 – 19:00</li>
+                </ul>
             </div>
         </div>
 
@@ -1251,74 +1247,60 @@
             margin-top: 4rem;
         }
 
-        .footer-container {
+        .footer-content {
             max-width: 1200px;
             margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
         }
 
-        .footer-col {
-            flex: 1;
+        .footer-section {
+            text-align: left;
         }
 
-        .footer-col-1 {
-            padding-right: 2rem;
-        }
-
-        .footer-col-2 {
-            display: flex;
-            gap: 3rem;
-        }
-
-        .footer h3 {
+        .footer-section h3 {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
             color: #fff;
         }
 
-        .footer h3 span {
+        .footer-section h3 span {
             color: var(--accent-pink);
         }
 
-        .footer h4 {
+        .footer-section h4 {
             font-size: 1rem;
             margin-bottom: 1rem;
             color: #fff;
             font-weight: 500;
         }
 
-        .footer p {
+        .footer-section p {
             color: #888;
             font-size: 0.85rem;
             line-height: 1.5;
-            margin-bottom: 1.5rem;
         }
 
-        .footer ul {
+        .footer-section ul {
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        .footer ul li {
+        .footer-section ul li {
             margin-bottom: 0.5rem;
         }
 
-        .footer ul li a {
+        .footer-section ul li a {
             color: #888;
             text-decoration: none;
             font-size: 0.85rem;
             transition: color 0.2s;
         }
 
-        .footer ul li a:hover {
+        .footer-section ul li a:hover {
             color: var(--accent-pink);
-        }
-
-        .footer-nav, .footer-users, .footer-contacts {
-            margin-bottom: 0;
         }
 
         .footer-bottom {
@@ -1353,32 +1335,30 @@
             color: var(--accent-pink);
         }
 
-
-        /* ===== ТЕЛЕФОНЫ (до 768px) ===== */
+        /* ===== ТЕЛЕФОН ===== */
         @media (max-width: 768px) {
             .footer {
                 padding: 1.5rem;
             }
 
-            .footer-container {
-                flex-direction: column;
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
                 gap: 1.5rem;
             }
 
-            .footer-col-1 {
-                padding-right: 0;
-            }
-
-            .footer-col-2 {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .footer h3, .footer h4, .footer p, .footer ul {
+            .footer-section {
                 text-align: center;
             }
 
-            .footer ul li {
+            .footer-section h3,
+            .footer-section h4,
+            .footer-section p,
+            .footer-section ul {
+                text-align: center;
+            }
+
+            .footer-section ul li {
                 text-align: center;
             }
 
@@ -1388,23 +1368,11 @@
             }
         }
 
-        /* ===== ПЛАНШЕТЫ (769px - 1024px) ===== */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .footer-container {
-                display: flex !important;
-                flex-direction: row !important;
-                gap: 2rem !important;
-            }
-
-            .footer-col-1 {
-                flex: 1 !important;
-            }
-
-            .footer-col-2 {
-                flex: 1 !important;
-                display: flex !important;
-                flex-direction: column !important;  /* ВЕРТИКАЛЬНО, а не горизонтально */
-                gap: 1.5rem !important;
+        /* ===== ПЛАНШЕТ ===== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
             }
         }
 

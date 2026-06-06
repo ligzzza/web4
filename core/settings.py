@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 import sentry_sdk
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.SUCCESS: 'success',
+    messages.ERROR: 'error',
+    messages.WARNING: 'warning',
+    messages.INFO: 'info',
+}
 
 sentry_sdk.init(
     dsn="https://856993dd90d84064c765dd71e420c609@o4511406016692224.ingest.de.sentry.io/4511406353154128",

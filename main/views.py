@@ -2,7 +2,7 @@ from rest_framework import permissions, viewsets, generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .models import MasterClass, Category, Booking, Review, Favorite, Notification, Image, Session
+from .models import MasterClass, Category, Booking, Review, Favorite, Image, Session
 from .serializers import (
     MasterClassSerializer, CategorySerializer, BookingSerializer,
     ReviewSerializer, FavoriteSerializer, UserSerializer, RegisterSerializer
@@ -1367,38 +1367,51 @@ def payment_page_view(request: HttpRequest, masterclass_id: int) -> HttpResponse
         masterclass_id: ID мастер-класса
     Returns:HttpResponse: Страница оплаты или перенаправление"""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-
-    # Получаем данные из сессии
     booking_data = request.session.get('booking_data', {})
 
     if not booking_data:
         return redirect('catalog')
 
-    session = get_object_or_404(Session, id=booking_data.get('session_id'))
-    participants_count = booking_data.get('participants_count', 1)
-    total_price = masterclass.price * participants_count
+    try:
+        session = get_object_or_404(Session, id=booking_data.get('session_id'))
+        participants_count = booking_data.get('participants_count', 1)
+        total_price = masterclass.price * participants_count
+    except (KeyError, TypeError, ValueError):
+        messages.error(request, 'Ошибка в данных бронирования. Попробуйте снова.')
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     if request.method == 'POST':
-        # Создаём бронирование
-        Booking.objects.create(
-            participant=request.user,
-            masterclass=masterclass,
-            session=session,
-            status='confirmed',
-            payment_status='paid',
-            participants_count=participants_count,
-            total_price=total_price
-        )
+        try:
+            with transaction.atomic():
+                # Проверка свободных мест
+                if not session.has_free_places:
+                    messages.error(request, 'К сожалению, свободные места закончились.')
+                    return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
-        # Обновляем количество участников в сеансе
-        session.current_participants += participants_count
-        session.save()
+                # Создаём бронирование
+                Booking.objects.create(
+                    participant=request.user,
+                    masterclass=masterclass,
+                    session=session,
+                    status='confirmed',
+                    payment_status='paid',
+                    participants_count=participants_count,
+                    total_price=total_price
+                )
 
-        # Очищаем сессию
-        request.session.pop('booking_data', None)
+                # Обновляем количество участников
+                session.current_participants += participants_count
+                session.save()
 
-        messages.success(request, f'Вы успешно записались на "{masterclass.title}"!')
-        return redirect('participant_dashboard')
+                # Очищаем сессию
+                request.session.pop('booking_data', None)
+
+                messages.success(request, f'Вы успешно записались на "{masterclass.title}"!')
+                return redirect('participant_dashboard')
+
+        except Exception as e:
+            messages.error(request, f'Произошла ошибка при оплате: {str(e)}. Попробуйте позже.')
+            return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     context = {
         'masterclass': masterclass,
@@ -1414,22 +1427,16 @@ def payment_page_view(request: HttpRequest, masterclass_id: int) -> HttpResponse
 
 @login_required
 def cancel_booking_view(request: HttpRequest, booking_id: int) -> HttpResponse:
-    """Отмена бронирования пользователем.
-    Args:request: HTTP-запрос
-        booking_id: ID бронирования
-    Returns:HttpResponse: Перенаправление или страница подтверждения"""
-
+    """Отмена бронирования пользователем."""
     booking = get_object_or_404(Booking, id=booking_id, participant=request.user)
-
+    session = booking.session
     masterclass = booking.masterclass
 
     # Проверка: можно ли отменить (за 24 часа до начала)
-    time_until_start = booking.session.start_datetime - timezone.now()
+    time_until_start = session.start_datetime - timezone.now()
     can_cancel = time_until_start > timedelta(hours=24)
-    print(f"Can cancel: {can_cancel}, hours left: {time_until_start.total_seconds() / 3600}")
 
     if request.method == 'POST':
-
         if not can_cancel:
             messages.error(request, 'Отмена невозможна: до начала мастер-класса осталось менее 24 часов')
             return redirect('participant_dashboard')
@@ -1444,20 +1451,14 @@ def cancel_booking_view(request: HttpRequest, booking_id: int) -> HttpResponse:
                 booking.payment_status = 'refunded'
                 booking.save()
 
-                masterclass.refresh_from_db()
+                # Обновляем количество участников в СЕАНСЕ, а не в мастер-классе
+                session.current_participants -= booking.participants_count
+                if session.current_participants < 0:
+                    session.current_participants = 0
+                session.save()
 
-                masterclass.current_participants -= booking.participants_count
-
-                if masterclass.current_participants < 0:
-                    masterclass.current_participants = 0
-
-                masterclass.save(update_fields=['current_participants'])
-
-                messages.success(request,
-                                 f'Запись на мастер-класс "{masterclass.title}" отменена. Деньги будут возвращены в течение 3-5 рабочих дней.')
-                print("SUCCESS")
+                messages.success(request, f'Запись на мастер-класс "{masterclass.title}" отменена. Деньги будут возвращены в течение 3-5 рабочих дней.')
         except Exception as e:
-            print(f"ERROR: {e}")
             messages.error(request, f'Ошибка при отмене: {str(e)}')
 
         return redirect('participant_dashboard')
