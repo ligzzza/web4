@@ -187,8 +187,8 @@
                             <textarea id="edit-text-{{ review.id }}" name="text" rows="3" style="width: 100%; padding: 0.5rem; border-radius: 10px;"></textarea>
                         </div>
                         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                            <button type="submit" class="btn-small">💾 Сохранить</button>
-                            <button type="button" onclick="hideEditForm({{ review.id }})" class="btn-small" style="background: #ccc;">Отмена</button>
+                            <button type="submit" class="review-save-btn">Сохранить</button>
+                            <button type="button" onclick="hideEditForm({{ review.id }})" class="review-cancel-btn">Отмена</button>
                         </div>
                     </form>
                 </div>
@@ -200,11 +200,13 @@
     </div>
 
     <!-- Форма добавления отзыва -->
-    {% if can_review %}
+    {% if can_review or show_review_form %}
     <div class="card" style="margin-top: 2rem; background: #f9f9f9;">
-        <h3>✍️ Оставить отзыв</h3>
+        <h3>Оставить отзыв</h3>
         <form method="post" action="{% url 'add_review' masterclass.id %}">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
             <div class="form-group">
                 <label>Ваша оценка:</label>
                 <select name="rating" required style="width: 100%; padding: 0.5rem; border-radius: 10px;">
@@ -804,6 +806,41 @@
             font-size: 0.75rem !important;
             padding: 0.4rem 0.8rem !important;
         }
+    }
+    /* Кнопки в форме редактирования отзыва */
+    .review-save-btn,
+    .review-cancel-btn {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: 'Jost', sans-serif;
+        border: none;
+    }
+
+    .review-save-btn {
+        background: var(--accent-pink);
+        color: white;
+    }
+
+    .review-save-btn:hover {
+        background: #d48a9e;
+        transform: translateY(-2px);
+    }
+
+    .review-cancel-btn {
+        background: transparent;
+        border: 2px solid var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .review-cancel-btn:hover {
+        background: var(--soft-blue);
+        transform: translateY(-2px);
     }
 </style>
 {% endblock %}

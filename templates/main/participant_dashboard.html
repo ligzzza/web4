@@ -88,7 +88,13 @@
                         </div>
                     </div>
                     <div class="booking-actions">
-                        <a href="{% url 'booking_detail' booking.id %}" class="btn-small">Подробнее</a>
+                        <a href="{% url 'booking_detail' booking.id %}" class="btn-booking-detail">Подробнее</a>
+
+                        {% if booking.has_review_for_mc %}
+                            <span class="review-done">Отзыв оставлен</span>
+                        {% else %}
+                            <a href="{% url 'masterclass_detail' booking.masterclass.id %}?next={{ request.path }}&review=1" class="btn-review">Оставить отзыв</a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -96,7 +102,6 @@
                 <p class="empty-message">Нет завершённых записей</p>
             {% endif %}
         </div>
-    </div>
 
 <!-- Модальное окно редактирования профиля -->
 <div id="editModal" class="modal" style="display: none;">
@@ -753,6 +758,50 @@
         background: #d1ecf1;
         color: #0c5460;
         border: 1px solid #bee5eb;
+    }
+    /* Кнопки в профиле участника */
+    .btn-booking-detail,
+    .btn-review {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-family: 'Jost', sans-serif;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-booking-detail {
+        background: var(--soft-blue);
+        color: var(--dark-text);
+    }
+
+    .btn-booking-detail:hover {
+        background: #a8d4c0;
+        transform: translateY(-2px);
+    }
+
+    .btn-review {
+        background: #d48a9e;  /* более тёмный розовый */
+        color: white;
+    }
+
+    .btn-review:hover {
+        background: #bc6f8c;
+        transform: translateY(-2px);
+    }
+
+    .review-done {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: #e8f5e9;
+        color: #2e7d32;
     }
 </style>
 {% endblock %}

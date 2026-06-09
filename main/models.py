@@ -311,6 +311,7 @@ class Booking(models.Model):
                                                      verbose_name="Количество мест")
     total_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена на момент бронирования")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    comment = models.TextField(blank=True, verbose_name="Комментарий к бронированию")
 
     class Meta:
         verbose_name = "Бронирование"
@@ -376,4 +377,3 @@ class Favorite(models.Model):
     def __str__(self) -> str:
         """Возвращает строковое представление избранного."""
         return f"{self.user.get_full_name()} → {self.masterclass.title}"
-

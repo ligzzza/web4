@@ -544,7 +544,7 @@
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .nav {
                 flex-direction: column;
                 align-items: stretch;
@@ -777,7 +777,7 @@
         }
 
         /* Адаптивность */
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .top-grid {
                 grid-template-columns: 1fr;
             }
@@ -1011,7 +1011,7 @@
         }
 
         /* Адаптивность */
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -1222,8 +1222,8 @@
             <div class="footer-section">
                 <h4>Контакты</h4>
                 <ul class="contact-list">
-                    <li><a href="tel:+79651124676">+7 (965) 112-46-76</a></li>
-                    <li><a href="mailto:galova.liza06@gmail.com">galova.liza06@gmail.com</a></li>
+                    <li><a href="tel:+79651124676">+7 (965) 112-46-77</a></li>
+                    <li><a href="mailto:galova.liza06@gmail.com">galov.liza06@gmail.com</a></li>
                     <li>Пн–Пт: 10:00 – 19:00</li>
                 </ul>
             </div>
@@ -1239,6 +1239,85 @@
     </footer>
 
     <style>
+        /* ===== ПЛАНШЕТЫ (768px - 1024px) ===== */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            /* Шапка */
+            .header {
+                padding: 0.5rem 1rem !important;
+            }
+
+            .nav {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+            }
+
+            /* Логотип */
+            .logo {
+                font-size: 1.2rem !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Поиск — длиннее, почти до каталога */
+            .search-form {
+                max-width: 350px !important;
+                flex: 1 !important;
+                padding: 0.2rem 0.2rem 0.2rem 0.8rem !important;
+            }
+
+            .search-form input {
+                font-size: 0.8rem !important;
+                padding: 0.4rem 0 !important;
+            }
+
+            .search-btn {
+                padding: 0.35rem 0.8rem !important;
+            }
+
+            .search-btn svg {
+                width: 15px !important;
+                height: 15px !important;
+            }
+
+            /* Кнопки навигации */
+            .nav-links {
+                display: flex !important;
+                gap: 0.3rem !important;
+                align-items: center !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Скрываем текст у иконок */
+            .nav-icon-text {
+                display: none !important;
+            }
+
+            .nav-icon-link {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .nav-icon-link svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+
+            /* Обычные ссылки (Каталог, Создать, Админка, Выйти) */
+            .nav-links a:not(.nav-icon-link),
+            .nav-links button {
+                font-size: 0.7rem !important;
+                padding: 0.2rem 0.4rem !important;
+                white-space: nowrap !important;
+            }
+
+            /* Кнопка "Выйти" */
+            .nav-links form button {
+                padding: 0.2rem 0.5rem !important;
+                font-size: 0.65rem !important;
+            }
+        }
         /* ===== ПОДВАЛ ===== */
         .footer {
             background: #1a1a1a;
@@ -1336,7 +1415,7 @@
         }
 
         /* ===== ТЕЛЕФОН ===== */
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .footer {
                 padding: 1.5rem;
             }
@@ -1369,7 +1448,7 @@
         }
 
         /* ===== ПЛАНШЕТ ===== */
-        @media (min-width: 769px) and (max-width: 1024px) {
+        @media (min-width: 768px) and (max-width: 1024px) {
             .footer-content {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 1.5rem;
@@ -1395,7 +1474,7 @@
         }
 
         /* ===== ШАПКА ДЛЯ ТЕЛЕФОНА ===== */
-        @media (max-width: 768px) {
+        @media (max-width: 767px) {
             .header {
                 padding: 0.5rem 0.8rem !important;
             }

@@ -13,24 +13,30 @@
     <div class="info-card">
         <h3 style="color: var(--accent-pink);">Список участников</h3>
 
-        {% if bookings %}
-            <div style="margin-top: 1.5rem;">
-                {% for booking in bookings %}
-                <div class="participant-item">
-                    <div class="participant-info">
-                        <strong>{{ booking.participant.first_name }} {{ booking.participant.last_name }}</strong>
-                        <span class="badge-places">{{ booking.participants_count }} мест</span>
-                        <div class="participant-details">
-                            Почта:  {{ booking.participant.email }}<br>
-                            Телефон:  {{ booking.participant.phone|default:"Телефон не указан" }}
-                        </div>
-                    </div>
+    {% for booking in bookings %}
+    <div class="participant-item" style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div style="flex: 1;">
+                <strong>{{ booking.participant.get_full_name|default:booking.participant.username }}</strong>
+                <div style="color: #666; font-size: 0.85rem;">
+                    <span>{{ booking.participant.email }}</span>
+                    {% if booking.participant.phone %}
+                        <span style="margin-left: 1rem;">{{ booking.participant.phone }}</span>
+                    {% endif %}
                 </div>
-                {% endfor %}
+                {% if booking.comment %}
+                    <div style="background: #f9f9f9; border-radius: 12px; padding: 0.5rem 0.8rem; margin-top: 0.5rem;">
+                        <span style="font-size: 0.7rem; color: #888;">Комментарий:</span>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #555;">{{ booking.comment }}</p>
+                    </div>
+                {% endif %}
             </div>
-        {% else %}
-            <p class="empty-message">На этот сеанс пока никто не записался</p>
-        {% endif %}
+            <div>
+                <span class="status confirmed">{{ booking.participants_count }} место</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 
         <div style="margin-top: 2rem;">
             <a href="{% url 'masterclass_detail' masterclass.id %}" class="btn">Назад к мастер-классу</a>

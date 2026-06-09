@@ -12,7 +12,7 @@ MESSAGE_TAGS = {
 
 sentry_sdk.init(
     dsn="https://856993dd90d84064c765dd71e420c609@o4511406016692224.ingest.de.sentry.io/4511406353154128",
-    traces_sample_rate=1.0,
+    traces_sample_rate=0.1,
     send_default_pii=True,
 )
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'silk',
     # Local apps
     'main',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -82,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'mastergrad_db',
         'USER': 'postgres',
-        'PASSWORD': '18glLi',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }

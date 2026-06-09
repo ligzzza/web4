@@ -2,9 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from .models import MasterClass, Category, Booking, Review, Favorite, Session
-
 User = get_user_model()
-
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователей"""
@@ -13,14 +11,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'phone', 'role', 'avatar']
 
-
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для категорий"""
 
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'description', 'image']
-
 
 class SessionSerializer(serializers.ModelSerializer):
     """Сериализатор для сеансов"""
@@ -29,7 +25,6 @@ class SessionSerializer(serializers.ModelSerializer):
         model = Session
         fields = ['id', 'start_datetime', 'end_datetime', 'max_participants', 'current_participants', 'status',
                   'meeting_link']
-
 
 class MasterClassSerializer(serializers.ModelSerializer):
     """Сериализатор для мастер-классов"""
@@ -57,7 +52,6 @@ class MasterClassSerializer(serializers.ModelSerializer):
             return Favorite.objects.filter(user=request.user, masterclass=obj).exists()
         return False
 
-
 class BookingSerializer(serializers.ModelSerializer):
     """Сериализатор для бронирований"""
     participant_name = serializers.ReadOnlyField(source='participant.username')
@@ -72,7 +66,6 @@ class BookingSerializer(serializers.ModelSerializer):
             'participants_count', 'total_price', 'created_at'
         ]
         read_only_fields = ['participant', 'total_price', 'created_at']
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов"""
@@ -91,7 +84,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         Returns:str: Полное имя автора"""
         return f"{obj.author.first_name} {obj.author.last_name}".strip() or obj.author.username
 
-
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного"""
     masterclass_info = MasterClassSerializer(source='masterclass', read_only=True)
@@ -100,7 +92,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = Favorite
         fields = ['id', 'user', 'masterclass', 'masterclass_info', 'created_at']
         read_only_fields = ['user', 'created_at']
-
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации"""

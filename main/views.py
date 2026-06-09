@@ -640,19 +640,23 @@ def participant_dashboard(request: HttpRequest) -> HttpResponse:
         request: HTTP-запрос от участника
     Returns:
         HttpResponse: Страница профиля участника с бронированиями"""
-    # Получаем все активные бронирования
     all_bookings = Booking.objects.filter(participant=request.user).exclude(status='cancelled')
 
-    # Разделяем на активные (будущие) и прошедшие
     upcoming_bookings = all_bookings.filter(
         session__start_datetime__gt=timezone.now()
     ).order_by('session__start_datetime')
 
     past_bookings = all_bookings.filter(
         session__start_datetime__lte=timezone.now()
-    ).order_by('-session__start_datetime')
+    ).select_related('review').order_by('-session__start_datetime')
 
-    context: dict = {
+    for booking in past_bookings:
+        booking.has_review_for_mc = Review.objects.filter(
+            author=request.user,
+            masterclass=booking.masterclass
+        ).exists()
+
+    context = {
         'user': request.user,
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
@@ -689,9 +693,12 @@ def organizer_dashboard(request: HttpRequest) -> HttpResponse:
         organizer=request.user
     ).select_related('category').prefetch_related('sessions').order_by('-created_at')
 
-    # Для каждого мастер-класса добавляем первый сеанс
+    # Добавляем для каждого МК количество активных сеансов
     for mc in my_masterclasses:
-        mc.first_session = mc.sessions.filter(status='active').order_by('start_datetime').first()
+        mc.active_sessions_count = mc.sessions.filter(
+            status='active',
+            start_datetime__gt=timezone.now()
+        ).count()
 
     context = {
         'user': request.user,
@@ -739,7 +746,10 @@ def home_view(request: HttpRequest) -> HttpResponse:
 
     # Статистика
     total_masterclasses = MasterClass.objects.filter(status='approved').count()
-    total_participants = Booking.objects.filter(status='confirmed').count()
+    total_participants = Booking.objects.filter(
+        status='completed',
+        payment_status='paid'
+    ).values('participant').distinct().count()
     total_organizers = User.objects.filter(role='organizer').count()
     total_cities = MasterClass.objects.filter(status='approved').values('city').distinct().count()
 
@@ -987,7 +997,7 @@ def masterclass_detail_view(request: HttpRequest, masterclass_id: int) -> HttpRe
         status='approved',
         category=masterclass.category
     ).exclude(id=masterclass.id)[:3]
-
+    show_review_form = request.GET.get('review') == '1' and can_review
     context = {
         'masterclass': masterclass,
         'is_favorite': is_favorite,
@@ -1001,6 +1011,7 @@ def masterclass_detail_view(request: HttpRequest, masterclass_id: int) -> HttpRe
         'show_more_button': show_more_button,
         'all_sessions_count': all_sessions_count,
         'similar_masterclasses': similar_masterclasses,
+        'show_review_form': show_review_form,
     }
 
     return render(request, 'main/masterclass_detail.html', context)
@@ -1296,28 +1307,41 @@ def delete_masterclass_view(request: HttpRequest, masterclass_id: int) -> HttpRe
 
 @login_required
 def add_review_view(request: HttpRequest, masterclass_id: int) -> HttpResponse:
-    """Добавление отзыва на мастер-класс (обработка POST)."""
+    """Добавление отзыва на мастер-класс."""
     masterclass = get_object_or_404(MasterClass, id=masterclass_id)
-
+    next_url = request.POST.get('next') or request.GET.get('next') or request.META.get('HTTP_REFERER', '/')
     if request.method == 'POST':
         rating = int(request.POST.get('rating', 5))
         text = request.POST.get('text', '')
 
+        # Проверка: есть ли завершённое бронирование
         user_booking = Booking.objects.filter(
             participant=request.user,
             masterclass=masterclass,
-            status='pending'
+            status='completed'
         ).first()
 
-        if user_booking and not Review.objects.filter(author=request.user, masterclass=masterclass).exists():
+        # Проверка: нет ли уже отзыва от этого пользователя
+        existing_review = Review.objects.filter(
+            author=request.user,
+            masterclass=masterclass
+        ).exists()
+
+        if user_booking and not existing_review:
             Review.objects.create(
                 author=request.user,
                 masterclass=masterclass,
                 booking=user_booking,
                 rating=rating,
                 text=text,
-                status='approved'
+                status='pending'  # ← на модерацию
             )
+            messages.success(request, 'Ваш отзыв отправлен на модерацию и появится после проверки администратором.')
+        else:
+            messages.error(request, 'Вы уже оставляли отзыв на этот мастер-класс или у вас нет завершённого бронирования.')
+        if next_url:
+            return redirect(next_url)
+        return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
     return redirect('masterclass_detail', masterclass_id=masterclass.id)
 
@@ -1387,7 +1411,7 @@ def payment_page_view(request: HttpRequest, masterclass_id: int) -> HttpResponse
                 if not session.has_free_places:
                     messages.error(request, 'К сожалению, свободные места закончились.')
                     return redirect('masterclass_detail', masterclass_id=masterclass.id)
-
+                comment = booking_data.get('comment', '')
                 # Создаём бронирование
                 Booking.objects.create(
                     participant=request.user,
@@ -1396,7 +1420,8 @@ def payment_page_view(request: HttpRequest, masterclass_id: int) -> HttpResponse
                     status='confirmed',
                     payment_status='paid',
                     participants_count=participants_count,
-                    total_price=total_price
+                    total_price=total_price,
+                    comment = comment,
                 )
 
                 # Обновляем количество участников

@@ -8,7 +8,7 @@
         <!-- ЛЕВАЯ КОЛОНКА - Информация о мастер-классе -->
         <div class="payment-left">
             <div class="payment-section">
-                <h2>📋 Детали бронирования</h2>
+                <h2>Детали бронирования</h2>
 
                 <div class="masterclass-info">
                     <h3>{{ masterclass.title }}</h3>
@@ -32,7 +32,7 @@
             </div>
 
             <div class="payment-section">
-                <h3>👤 Данные участника</h3>
+                <h2>Данные участника</h2>
                 <div class="info-row">
                     <span class="info-label">Имя:</span>
                     <span class="info-value">{{ participant_name }}</span>
@@ -61,7 +61,7 @@
         <!-- ПРАВАЯ КОЛОНКА - Оплата -->
         <div class="payment-right">
             <div class="payment-section">
-                <h2>💳 Оплата</h2>
+                <h2>Оплата</h2>
 
                 <div class="total-amount">
                     <span>Итого к оплате:</span>
@@ -75,7 +75,6 @@
                             <span class="radio-circle"></span>
                         </div>
                         <div class="method-info">
-                            <div class="method-icon">💳</div>
                             <div class="method-name">Банковская карта</div>
                         </div>
                     </div>
@@ -85,7 +84,6 @@
                             <span class="radio-circle"></span>
                         </div>
                         <div class="method-info">
-                            <div class="method-icon">📱</div>
                             <div class="method-name">СБП (Система быстрых платежей)</div>
                         </div>
                     </div>
@@ -356,22 +354,62 @@
         border: 1px solid var(--soft-pink);
     }
 
+    /* Улучшенные заголовки для читаемости */
     .payment-section h2 {
-        font-size: 1.5rem;
-        color: var(--accent-pink);
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--dark-text);
         margin-bottom: 1.2rem;
         text-align: left;
+        border-left: 4px solid var(--accent-pink);
+        padding-left: 0.8rem;
     }
 
     .payment-section h3 {
         font-size: 1.2rem;
+        font-weight: 600;
         color: var(--dark-text);
         margin-bottom: 1rem;
+        border-bottom: 2px solid var(--soft-pink);
+        padding-bottom: 0.5rem;
     }
 
     .masterclass-info h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
         color: var(--accent-pink);
         margin-bottom: 1rem;
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    /* Итоговая сумма */
+    .total-amount {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        background: var(--soft-pink);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .total-amount span:first-child {
+        color: var(--dark-text);
+    }
+
+    .total-price {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--accent-pink);
+    }
+
+    /* Заголовок блока оплаты */
+    .payment-right .payment-section:first-child h2 {
+        color: var(--dark-text);
+        border-left-color: var(--accent-pink);
     }
 
     .info-row {
@@ -391,23 +429,8 @@
         text-align: right;
     }
 
-    .total-amount {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background: var(--soft-pink);
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
 
-    .total-price {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--accent-pink);
-    }
+
 
     .payment-methods {
         margin-bottom: 1.5rem;
